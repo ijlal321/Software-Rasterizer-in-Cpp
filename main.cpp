@@ -2,10 +2,17 @@
 #include <vector>
 #include <SDL.h>
 #include "display.h"
+#include "vector.h"
 
 bool is_running = false;
 std::vector<uint32_t> color_buffer;
 Display display (color_buffer);
+
+#define N_POINTS (9 * 9 * 9)
+vec3_t cube_points[N_POINTS]; // 9x9x9 cube
+vec2_t projected_points[N_POINTS];
+
+float fov_factor = 128;
 
 void process_input() {
 	SDL_Event event;
@@ -26,23 +33,73 @@ void process_input() {
 	}
 }
 
+void setup() {
+	display.setup();
+
+	int point_count = 0;
+
+	// Start loading my array of vectors
+	// From -1 to 1 (in this 9x9x9 cube)
+	for (float x = -1; x <= 1; x += 0.25) {
+		for (float y = -1; y <= 1; y += 0.25) {
+			for (float z = -1; z <= 1; z += 0.25) {
+				vec3_t new_point = { x, y, z };
+				cube_points[point_count++] = new_point;
+			}
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Function that receives a 3D vector and returns a projected 2D point
+////////////////////////////////////////////////////////////////////////////////
+vec2_t project(vec3_t point) {
+	vec2_t projected_point{ (fov_factor * point.x), (fov_factor * point.y) };
+	return projected_point;
+}
+
 void update(void) {
-	// TODO:
+	for (int i = 0; i < N_POINTS; i++) {
+		vec3_t point = cube_points[i];
+
+		// Project the current point
+		vec2_t projected_point = project(point);
+		// Save the projected 2D vector in the array of projected points
+		projected_points[i] = projected_point;
+	}
 }
 
 void render() {
 
-	display.draw_grid(0xFFFFFF00);
-	display.draw_rect(100, 500, 200, 100, 0xFFFF0000);
+	display.draw_grid(0xFF444444);
+	//display.draw_rect(100, 500, 200, 100, 0xFFFF0000);
+	//display.draw_pixel(20, 20, 0xFF00FF00);
+
+
+	// Loop all projected points and render them
+	for (int i = 0; i < N_POINTS; i++) {
+		vec2_t projected_point = projected_points[i];
+		display.draw_rect(
+			projected_point.x + (display.window_width / 2),
+			projected_point.y + (display.window_height / 2),
+			4,
+			4,
+			0xFFFFFF00
+		);
+	}
+
+
 
 	display.render();
 }
 
 
+
+
 int main(int argc, char* args[]) {
 	is_running = display.initialize_window();
 
-	display.setup();
+	setup();
 
 	while (is_running) {
 		process_input();

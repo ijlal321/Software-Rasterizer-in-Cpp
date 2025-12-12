@@ -57,7 +57,8 @@ void Display::draw_grid(uint32_t color) {
 void Display::draw_rect(int x_pos, int y_pos, int height, int width, uint32_t color) {
 	for (int r = y_pos; r < y_pos + height; r++) {
 		for (int c = x_pos; c < x_pos + width; c++) {
-			color_buffer[(r * window_width) + c] = color;
+			/*color_buffer[(r * window_width) + c] = color;*/
+			draw_pixel(c, r, color);
 		}
 	}
 }
@@ -114,3 +115,11 @@ void Display::render() {
 
 	SDL_RenderPresent(renderer);
 }
+
+void Display::draw_pixel(int x, int y, uint32_t color) {
+	if (x < 0 || x >= window_width || y < 0 || y >= window_height) {
+		return;
+	}
+	color_buffer[(window_width * y) + x] = color;
+}
+

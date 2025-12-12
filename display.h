@@ -29,5 +29,6 @@ public:
 	void destroy_window();
 	void setup();
 	void render();
+	void draw_pixel(int x, int y, uint32_t color);
 };
 
