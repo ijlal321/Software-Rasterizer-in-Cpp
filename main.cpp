@@ -12,7 +12,9 @@ Display display (color_buffer);
 vec3_t cube_points[N_POINTS]; // 9x9x9 cube
 vec2_t projected_points[N_POINTS];
 
-float fov_factor = 128;
+vec3_t camera_position = { 0, 0, -5 };
+
+float fov_factor = 640;
 
 void process_input() {
 	SDL_Event event;
@@ -54,13 +56,16 @@ void setup() {
 // Function that receives a 3D vector and returns a projected 2D point
 ////////////////////////////////////////////////////////////////////////////////
 vec2_t project(vec3_t point) {
-	vec2_t projected_point{ (fov_factor * point.x), (fov_factor * point.y) };
+	//std::cout << "x-> " << point.x << " y-> " << point.y << " z-> " << point.z << std::endl;
+	vec2_t projected_point{ (fov_factor * point.x) / point.z, (fov_factor * point.y)/ point.z };
 	return projected_point;
 }
 
 void update(void) {
 	for (int i = 0; i < N_POINTS; i++) {
 		vec3_t point = cube_points[i];
+
+		point.z -= camera_position.z; // Move the point relative to the camera position
 
 		// Project the current point
 		vec2_t projected_point = project(point);
