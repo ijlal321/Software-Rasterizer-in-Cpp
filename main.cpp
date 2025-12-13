@@ -12,9 +12,12 @@ Display display (color_buffer);
 vec3_t cube_points[N_POINTS]; // 9x9x9 cube
 vec2_t projected_points[N_POINTS];
 
+
 vec3_t camera_position = { 0, 0, -5 };
+vec3_t cube_rotation = { 0,0,0 };
 
 float fov_factor = 640;
+int previous_frame_time = 0;
 
 void process_input() {
 	SDL_Event event;
@@ -57,13 +60,33 @@ void setup() {
 ////////////////////////////////////////////////////////////////////////////////
 vec2_t project(vec3_t point) {
 	//std::cout << "x-> " << point.x << " y-> " << point.y << " z-> " << point.z << std::endl;
-	vec2_t projected_point{ (fov_factor * point.x) / point.z, (fov_factor * point.y)/ point.z };
+	vec2_t projected_point{
+		(fov_factor * point.x) / point.z, 
+		(fov_factor * point.y)/ point.z 
+	};
 	return projected_point;
 }
 
 void update(void) {
+	// Wait some time until the reach the target frame time in milliseconds
+	int wait_time = FRAME_TARGET_TIME - (SDL_GetTicks() - previous_frame_time);
+
+	if (wait_time > 0 && wait_time <= FRAME_TARGET_TIME) {
+		SDL_Delay(wait_time);
+	}
+	previous_frame_time = SDL_GetTicks();
+
+	cube_rotation.x += 0.01f;
+	cube_rotation.y += 0.01f;
+	cube_rotation.z += 0.01f;
+
 	for (int i = 0; i < N_POINTS; i++) {
 		vec3_t point = cube_points[i];
+
+		// Apply rotation
+		point.vec3_rotate_x(cube_rotation.x);
+		point.vec3_rotate_y(cube_rotation.y);
+		point.vec3_rotate_z(cube_rotation.z);
 
 		point.z -= camera_position.z; // Move the point relative to the camera position
 

@@ -13,6 +13,10 @@ public:
 	float x, y,z;
 	
 	vec3_t(float _x = 0.f, float _y = 0.f, float _z = 0.f) : x(_x), y(_y), z(_z) {};
+
+	void vec3_rotate_x(float angle);
+	void vec3_rotate_y(float angle);
+	void vec3_rotate_z(float angle);
 };
 
 
