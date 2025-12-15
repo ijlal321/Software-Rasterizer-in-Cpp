@@ -64,9 +64,9 @@ void update(void) {
 	}
 	previous_frame_time = SDL_GetTicks();
 
-	//cube_rotation.x += 0.01f;
-	//cube_rotation.y += 0.01f;
-	//cube_rotation.z += 0.01f;
+	cube_rotation.x += 0.01f;
+	cube_rotation.y += 0.01f;
+	cube_rotation.z += 0.01f;
 
 	for (int i = 0; i < N_MESH_FACES; i++) {
 		face_t mesh_face = cube_mesh.mesh_faces[i];
@@ -118,12 +118,12 @@ void render() {
 		display.draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
 		display.draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
 
-		display.draw_line(triangle.points[0].x, triangle.points[0].y,
-			triangle.points[1].x, triangle.points[1].y, 0xFFFFFF00);
-		display.draw_line(triangle.points[1].x, triangle.points[1].y,
-			triangle.points[2].x, triangle.points[2].y, 0xFFFFFF00);
-		display.draw_line(triangle.points[2].x, triangle.points[2].y,
-			triangle.points[0].x, triangle.points[0].y, 0xFFFFFF00);
+		display.draw_triangle(
+			triangle.points[0].x, triangle.points[0].y,
+			triangle.points[1].x, triangle.points[1].y,
+			triangle.points[2].x, triangle.points[2].y,
+			0xFFFFFFFF
+		);
 
 	}
 
