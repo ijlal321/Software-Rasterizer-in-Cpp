@@ -6,7 +6,7 @@
 #include "Mesh.h"
 
 
-triangle_t triangles_to_render[N_MESH_FACES];
+std::vector<triangle_t> triangles_to_render;
 Mesh cube_mesh;
 
 bool is_running = false;
@@ -101,7 +101,7 @@ void update(void) {
 		}
 
 		// Save the projected triangle in the array of triangles to render
-		triangles_to_render[i] = projected_triangle;
+		triangles_to_render.push_back(projected_triangle);
 
 	}
 
@@ -112,7 +112,7 @@ void render() {
 	display.draw_grid(0xFF444444);
 
 	// Loop all projected triangles and render them
-	for (int i = 0; i < N_MESH_FACES; i++) {
+	for (int i = 0; i < triangles_to_render.size(); i++) {
 		triangle_t triangle = triangles_to_render[i];
 		display.draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
 		display.draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
@@ -126,7 +126,7 @@ void render() {
 		);
 
 	}
-
+	triangles_to_render.clear();
 	display.render();
 }
 
