@@ -42,16 +42,16 @@ bool Display::initialize_window() {
 void Display::draw_grid(uint32_t color) {
 	int multiple = 10;
 	for (int r = 0; r < window_height; r += multiple) {
-		for (int c = 0; c < window_width; c++) {
+		for (int c = 0; c < window_width; c += multiple) {
 			color_buffer[(window_width * r) + c] = color;
 		}
 	}
 
-	for (int c = 0; c < window_width; c += multiple) {
-		for (int r = 0; r < window_height; r++) {
-			color_buffer[(window_width * r) + c] = color;
-		}
-	}
+	//for (int c = 0; c < window_width; c += multiple) {
+	//	for (int r = 0; r < window_height; r++) {
+	//		color_buffer[(window_width * r) + c] = color;
+	//	}
+	//}
 }
 
 void Display::draw_rect(int x_pos, int y_pos, int height, int width, uint32_t color) {
