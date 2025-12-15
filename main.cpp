@@ -6,16 +6,14 @@
 #include "Mesh.h"
 
 
-std::vector<triangle_t> triangles_to_render;
-Mesh cube_mesh;
+std::vector<triangle_t> triangles_to_render; // triangles given to 
+mesh_t cube_mesh;  // Main Object we Display
 
 bool is_running = false;
 std::vector<uint32_t> color_buffer;
 Display display (color_buffer);
 
-
 vec3_t camera_position = { 0, 0, -5 };
-vec3_t cube_rotation = { 0,0,0 };
 
 float fov_factor = 640;
 int previous_frame_time = 0;
@@ -41,6 +39,7 @@ void process_input() {
 
 void setup() {
 	display.setup();
+	cube_mesh.load_cube_mesh_data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,27 +63,27 @@ void update(void) {
 	}
 	previous_frame_time = SDL_GetTicks();
 
-	cube_rotation.x += 0.01f;
-	cube_rotation.y += 0.01f;
-	cube_rotation.z += 0.01f;
+	cube_mesh.rotation.x += 0.01f;
+	cube_mesh.rotation.y += 0.01f;
+	cube_mesh.rotation.z += 0.01f;
 
-	for (int i = 0; i < N_MESH_FACES; i++) {
-		face_t mesh_face = cube_mesh.mesh_faces[i];
+	for (int i = 0; i < cube_mesh.faces.size(); i++) {
+		face_t mesh_face = cube_mesh.faces[i]; // get face from mesh
 		
-		vec3_t mesh_vertices[3];
-		mesh_vertices[0] = cube_mesh.mesh_vertices[mesh_face.a - 1];
-		mesh_vertices[1] = cube_mesh.mesh_vertices[mesh_face.b - 1];
-		mesh_vertices[2] = cube_mesh.mesh_vertices[mesh_face.c - 1];
+		vec3_t mesh_vertices[3]; // store vertexes of face
+		mesh_vertices[0] = cube_mesh.vertices[mesh_face.a - 1];
+		mesh_vertices[1] = cube_mesh.vertices[mesh_face.b - 1];
+		mesh_vertices[2] = cube_mesh.vertices[mesh_face.c - 1];
 
-		triangle_t projected_triangle;
+		triangle_t projected_triangle; // project face [3D] to triangle [2D] and store it here
 
 		for (int j = 0; j < 3; j++) {
 			vec3_t transformed_vertex = mesh_vertices[j];
 
 			// Apply rotation
-			transformed_vertex.vec3_rotate_x(cube_rotation.x);
-			transformed_vertex.vec3_rotate_y(cube_rotation.y);
-			transformed_vertex.vec3_rotate_z(cube_rotation.z);
+			transformed_vertex.vec3_rotate_x(cube_mesh.rotation.x);
+			transformed_vertex.vec3_rotate_y(cube_mesh.rotation.y);
+			transformed_vertex.vec3_rotate_z(cube_mesh.rotation.z);
 
 			// Translate the vertex away from the camera
 			transformed_vertex.z -= camera_position.z;
