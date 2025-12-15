@@ -27,6 +27,7 @@ public:
 	bool initialize_window();
 	void draw_grid(uint32_t color);
 	void draw_rect(int x_pos, int y_pos, int height, int width, uint32_t color);
+	void draw_line(int x0, int y0, int x1, int y1, uint32_t color);
 	void render_color_buffer();
 	void clear_color_buffer(uint32_t color);
 	void destroy_window();
