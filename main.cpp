@@ -102,18 +102,6 @@ void update(void) {
 			transformed_vertices[j] = transformed_vertex;
 		}
 
-		// Check backface culling
-		/*
-			1. find vector ab and ac
-			2. find the normal by ac cross ab
-				2.1 careful b/w ac x ab and ab x ac. Our face order is abc so we do ab x ac.
-				This is imp, bcz our +z axis is pointing out of the screen. 
-				So face facing outward. z is outside screen. Order is abc. Thus by right hand ac x ab points out of screen.
-			3. find vector from camera to a (camera_position - a)
-			4. find backface culling by dot product of normal and camera to a
-				4.1 its on back if dit product is less than zero.
-		*/
-
 		vec3_t vector_a = transformed_vertices[0]; /*   A   */
 		vec3_t vector_b = transformed_vertices[1]; /*  / \  */
 		vec3_t vector_c = transformed_vertices[2]; /* C---B */
@@ -167,9 +155,16 @@ void render() {
 	// Loop all projected triangles and render them
 	for (int i = 0; i < triangles_to_render.size(); i++) {
 		triangle_t triangle = triangles_to_render[i];
-		display.draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
-		display.draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
-		display.draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
+		//display.draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
+		//display.draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
+		//display.draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
+
+		triangle_t::draw_filled_triangle(display,
+			triangle.points[0].x, triangle.points[0].y,
+			triangle.points[1].x, triangle.points[1].y,
+			triangle.points[2].x, triangle.points[2].y,
+			0xFF00FFFF
+		);
 
 		display.draw_triangle(
 			triangle.points[0].x, triangle.points[0].y,
