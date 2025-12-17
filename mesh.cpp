@@ -8,7 +8,7 @@ static const int N_CUBE_VERTICES = 8;
 static const int N_CUBE_FACES = (6 * 2); // 6 cube faces, 2 triangles per face
 
 static vec3_t cube_mesh_vertices[N_CUBE_VERTICES] = {
-    { -1,  -1,  -1 }, // 1
+    { -1,  -1,  -1}, // 1
     { -1,  1,  -1 }, // 2
     { 1,  1,  -1 }, // 3
     { 1,  -1,  -1 }, // 4
@@ -20,23 +20,23 @@ static vec3_t cube_mesh_vertices[N_CUBE_VERTICES] = {
 
 static face_t cube_mesh_faces[N_CUBE_FACES] = {
     // front
-    { 1,  2,  3 },
-    { 1,  3,  4 },
+    { 1,  2,  3, 0xFFFF0000},
+    { 1,  3,  4, 0xFFFF0000},
     // right
-    { 4,  3,  5 },
-    { 4,  5,  6 },
+    { 4,  3,  5, 0xFF00FF00},
+    { 4,  5,  6, 0xFF00FF00},
     // back
-    { 6,  5,  7 },
-    { 6,  7,  8 },
+    { 6,  5,  7, 0xFF0000FF},
+    { 6,  7,  8, 0xFF0000FF},
     // left
-    { 8,  7,  2 },
-    { 8,  2,  1 },
+    { 8,  7,  2, 0xFFFFFF00},
+    { 8,  2,  1, 0xFFFFFF00},
     // top
-    { 2,  7,  5 },
-    { 2,  5,  3 },
+    { 2,  7,  5, 0xFFFF00FF},
+    { 2,  5,  3, 0xFFFF00FF},
     // bottom
-    { 6,  8,  1 },
-    { 6,  1,  4 }
+    { 6,  8,  1, 0xFF00FFFF},
+    { 6,  1,  4, 0xFF00FFFF}
 };
 
 

@@ -4,6 +4,7 @@
 #include "display.h"
 #include "vector.h"
 #include "Mesh.h"
+#include <algorithm>
 
 
 std::vector<triangle_t> triangles_to_render; // triangles given to 
@@ -54,8 +55,8 @@ void setup() {
 	display.cull_method = Cull_Method::CULL_BACKFACE;
 
 	display.setup();
-	//cube_mesh.load_cube_mesh_data();
-	cube_mesh.load_obj_file_data("assets/cube.obj");
+	cube_mesh.load_cube_mesh_data();
+	//cube_mesh.load_obj_file_data("assets/cube.obj");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +96,7 @@ void update(void) {
 	*/
 	for (int i = 0; i < cube_mesh.faces.size(); i++) {
 		face_t mesh_face = cube_mesh.faces[i]; // get face [3d] from mesh
-
+		
 		vec3_t mesh_vertices[3]; // store vertexes of face
 		mesh_vertices[0] = cube_mesh.vertices[mesh_face.a - 1];
 		mesh_vertices[1] = cube_mesh.vertices[mesh_face.b - 1];
@@ -159,6 +160,9 @@ void update(void) {
 
 		}
 
+		projected_triangle.color = mesh_face.color;
+		projected_triangle.avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0f;
+
 		// Save the projected triangle in the array of triangles to render
 		triangles_to_render.push_back(projected_triangle);
 
@@ -170,20 +174,22 @@ void render() {
 
 	display.draw_grid(0xFF444444);
 
+	// sort triangles to render by average depth (painter's algorithm)
+	std::sort(triangles_to_render.begin(), triangles_to_render.end(), [](triangle_t& t1, triangle_t& t2) {
+		return t1.avg_depth > t2.avg_depth;
+		}
+	);
+
 	// Loop all projected triangles and render them
 	for (int i = 0; i < triangles_to_render.size(); i++) {
 		triangle_t triangle = triangles_to_render[i];
-		//display.draw_rect(triangle.points[0].x, triangle.points[0].y, 3, 3, 0xFFFFFF00);
-		//display.draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
-		//display.draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
-
 		// Draw filled triangle
 		if (display.render_method == Render_Method::RENDER_FILL_TRIANGLE || display.render_method == Render_Method::RENDER_FILL_TRIANGLE_WIRE) {
 			triangle_t::draw_filled_triangle(display,
 				triangle.points[0].x, triangle.points[0].y,
 				triangle.points[1].x, triangle.points[1].y,
 				triangle.points[2].x, triangle.points[2].y,
-				0xFF555555
+				triangle.color
 			);
 		}
 
