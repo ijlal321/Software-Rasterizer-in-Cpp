@@ -28,16 +28,31 @@ void process_input() {
 		break;
 	case SDL_KEYDOWN:
 		std::cout << "pressed" << std::endl;
-		if (event.key.keysym.sym == SDLK_ESCAPE) {
+		if (event.key.keysym.sym == SDLK_ESCAPE)
 			is_running = false;
-		}
-		break;
+		if (event.key.keysym.sym == SDLK_1)
+			display.render_method = Render_Method::RENDER_WIRE_VERTEX;
+		if (event.key.keysym.sym == SDLK_2)
+			display.render_method = Render_Method::RENDER_WIRE;
+		if (event.key.keysym.sym == SDLK_3)
+			display.render_method = Render_Method::RENDER_FILL_TRIANGLE;
+		if (event.key.keysym.sym == SDLK_4)
+			display.render_method = Render_Method::RENDER_FILL_TRIANGLE_WIRE;
+		if (event.key.keysym.sym == SDLK_c)
+			display.cull_method = Cull_Method::CULL_BACKFACE;
+		if (event.key.keysym.sym == SDLK_d)
+			display.cull_method = Cull_Method::CULL_NONE;
+		break;	
 	default:
 		break;
 	}
 }
 
 void setup() {
+	// Initialize render mode and triangle culling method
+	display.render_method = Render_Method::RENDER_WIRE;
+	display.cull_method = Cull_Method::CULL_BACKFACE;
+
 	display.setup();
 	//cube_mesh.load_cube_mesh_data();
 	cube_mesh.load_obj_file_data("assets/cube.obj");
@@ -80,7 +95,7 @@ void update(void) {
 	*/
 	for (int i = 0; i < cube_mesh.faces.size(); i++) {
 		face_t mesh_face = cube_mesh.faces[i]; // get face [3d] from mesh
-		
+
 		vec3_t mesh_vertices[3]; // store vertexes of face
 		mesh_vertices[0] = cube_mesh.vertices[mesh_face.a - 1];
 		mesh_vertices[1] = cube_mesh.vertices[mesh_face.b - 1];
@@ -102,29 +117,32 @@ void update(void) {
 			transformed_vertices[j] = transformed_vertex;
 		}
 
-		vec3_t vector_a = transformed_vertices[0]; /*   A   */
-		vec3_t vector_b = transformed_vertices[1]; /*  / \  */
-		vec3_t vector_c = transformed_vertices[2]; /* C---B */
+		// Backface culling test to see if the current face should be projected
+		if (display.cull_method == Cull_Method::CULL_BACKFACE) {
+			vec3_t vector_a = transformed_vertices[0]; /*   A   */
+			vec3_t vector_b = transformed_vertices[1]; /*  / \  */
+			vec3_t vector_c = transformed_vertices[2]; /* C---B */
 
-		// Get the vector subtraction of B-A and C-A
-		vec3_t vector_ab = vec3_t::vec3_sub(vector_b, vector_a);
-		vec3_t vector_ac = vec3_t::vec3_sub(vector_c, vector_a);
-		vector_ab.vec3_normalize();
-		vector_ac.vec3_normalize();
+			// Get the vector subtraction of B-A and C-A
+			vec3_t vector_ab = vec3_t::vec3_sub(vector_b, vector_a);
+			vec3_t vector_ac = vec3_t::vec3_sub(vector_c, vector_a);
+			vector_ab.vec3_normalize();
+			vector_ac.vec3_normalize();
 
-		// Compute the face normal (using cross product to find perpendicular)
-		vec3_t normal = vec3_t::vec3_cross(vector_ab, vector_ac);
-		normal.vec3_normalize();
+			// Compute the face normal (using cross product to find perpendicular)
+			vec3_t normal = vec3_t::vec3_cross(vector_ab, vector_ac);
+			normal.vec3_normalize();
 
-		// Find the vector between vertex A in the triangle and the camera origin
-		vec3_t camera_ray = vec3_t::vec3_sub(camera_position, vector_a);
+			// Find the vector between vertex A in the triangle and the camera origin
+			vec3_t camera_ray = vec3_t::vec3_sub(camera_position, vector_a);
 
-		// Calculate how aligned the camera ray is with the face normal (using dot product)
-		float dot_normal_camera = vec3_t::vec3_dot(normal, camera_ray);
+			// Calculate how aligned the camera ray is with the face normal (using dot product)
+			float dot_normal_camera = vec3_t::vec3_dot(normal, camera_ray);
 
-		// Bypass the triangles that are looking away from the camera
-		if (dot_normal_camera < 0) {
-			continue;
+			// Bypass the triangles that are looking away from the camera
+			if (dot_normal_camera < 0) {
+				continue;
+			}
 		}
 
 		triangle_t projected_triangle; // project face [3D] to triangle [2D] and store it here
@@ -159,19 +177,32 @@ void render() {
 		//display.draw_rect(triangle.points[1].x, triangle.points[1].y, 3, 3, 0xFFFFFF00);
 		//display.draw_rect(triangle.points[2].x, triangle.points[2].y, 3, 3, 0xFFFFFF00);
 
-		triangle_t::draw_filled_triangle(display,
-			triangle.points[0].x, triangle.points[0].y,
-			triangle.points[1].x, triangle.points[1].y,
-			triangle.points[2].x, triangle.points[2].y,
-			0xFF00FFFF
-		);
+		// Draw filled triangle
+		if (display.render_method == Render_Method::RENDER_FILL_TRIANGLE || display.render_method == Render_Method::RENDER_FILL_TRIANGLE_WIRE) {
+			triangle_t::draw_filled_triangle(display,
+				triangle.points[0].x, triangle.points[0].y,
+				triangle.points[1].x, triangle.points[1].y,
+				triangle.points[2].x, triangle.points[2].y,
+				0xFF555555
+			);
+		}
 
-		display.draw_triangle(
-			triangle.points[0].x, triangle.points[0].y,
-			triangle.points[1].x, triangle.points[1].y,
-			triangle.points[2].x, triangle.points[2].y,
-			0xFFFFFFFF
-		);
+		// Draw triangle wireframe
+		if (display.render_method == Render_Method::RENDER_WIRE || display.render_method == Render_Method::RENDER_WIRE_VERTEX || display.render_method == Render_Method::RENDER_FILL_TRIANGLE) {
+			display.draw_triangle(
+				triangle.points[0].x, triangle.points[0].y,
+				triangle.points[1].x, triangle.points[1].y,
+				triangle.points[2].x, triangle.points[2].y,
+				0xFFFFFFFF
+			);
+		}
+
+		// Draw triangle vertex points
+		if (display.render_method == Render_Method::RENDER_WIRE_VERTEX) {
+			display.draw_rect(triangle.points[0].x - 3, triangle.points[0].y - 3, 6, 6, 0xFFFF0000); // vertex A
+			display.draw_rect(triangle.points[1].x - 3, triangle.points[1].y - 3, 6, 6, 0xFFFF0000); // vertex B
+			display.draw_rect(triangle.points[2].x - 3, triangle.points[2].y - 3, 6, 6, 0xFFFF0000); // vertex C
+		}
 
 	}
 	triangles_to_render.clear();

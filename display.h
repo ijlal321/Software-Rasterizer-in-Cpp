@@ -7,6 +7,19 @@
 #define FPS 30 
 #define FRAME_TARGET_TIME (1000 / FPS)
 
+
+enum class Cull_Method {
+	CULL_NONE,
+	CULL_BACKFACE
+};
+
+enum class Render_Method {
+	RENDER_WIRE,
+	RENDER_WIRE_VERTEX,
+	RENDER_FILL_TRIANGLE,
+	RENDER_FILL_TRIANGLE_WIRE
+};
+
 class Display
 {
 public:
@@ -15,6 +28,9 @@ public:
 
 	std::vector<uint32_t>& color_buffer;
 	SDL_Texture* color_buffer_texture = nullptr;
+
+	Cull_Method cull_method = Cull_Method::CULL_BACKFACE;
+	Render_Method render_method = Render_Method::RENDER_FILL_TRIANGLE_WIRE;
 
 	// constructors
 	Display(std::vector<uint32_t>& color_buffer) : color_buffer(color_buffer) {};
