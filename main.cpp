@@ -13,7 +13,7 @@ bool is_running = false;
 std::vector<uint32_t> color_buffer;
 Display display (color_buffer);
 
-vec3_t camera_position = { 0, 0, -5 };
+vec3_t camera_position = { 0, 0, 0 };
 
 float fov_factor = 640;
 int previous_frame_time = 0;
@@ -39,7 +39,8 @@ void process_input() {
 
 void setup() {
 	display.setup();
-	cube_mesh.load_cube_mesh_data();
+	//cube_mesh.load_cube_mesh_data();
+	cube_mesh.load_obj_file_data("assets/cube.obj");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,16 +68,26 @@ void update(void) {
 	cube_mesh.rotation.y += 0.01f;
 	cube_mesh.rotation.z += 0.01f;
 
+	/*
+		1. Get each face
+		2. get 3 vertices [3d] of a face.
+		3. rotate vertices [3d] (according to rotation)
+		3.5. move object back away from camera.
+		4. check back face culling of face
+		5. Project to 2d.
+		6. store in triangles to renfer
+
+	*/
 	for (int i = 0; i < cube_mesh.faces.size(); i++) {
-		face_t mesh_face = cube_mesh.faces[i]; // get face from mesh
+		face_t mesh_face = cube_mesh.faces[i]; // get face [3d] from mesh
 		
 		vec3_t mesh_vertices[3]; // store vertexes of face
 		mesh_vertices[0] = cube_mesh.vertices[mesh_face.a - 1];
 		mesh_vertices[1] = cube_mesh.vertices[mesh_face.b - 1];
 		mesh_vertices[2] = cube_mesh.vertices[mesh_face.c - 1];
 
-		triangle_t projected_triangle; // project face [3D] to triangle [2D] and store it here
-
+		// Loop all three vertices of this current face and apply transformations
+		vec3_t transformed_vertices[3];
 		for (int j = 0; j < 3; j++) {
 			vec3_t transformed_vertex = mesh_vertices[j];
 
@@ -86,10 +97,53 @@ void update(void) {
 			transformed_vertex.vec3_rotate_z(cube_mesh.rotation.z);
 
 			// Translate the vertex away from the camera
-			transformed_vertex.z -= camera_position.z;
+			transformed_vertex.z += 5;
 
+			transformed_vertices[j] = transformed_vertex;
+		}
+
+		// Check backface culling
+		/*
+			1. find vector ab and ac
+			2. find the normal by ac cross ab
+				2.1 careful b/w ac x ab and ab x ac. Our face order is abc so we do ab x ac.
+				This is imp, bcz our +z axis is pointing out of the screen. 
+				So face facing outward. z is outside screen. Order is abc. Thus by right hand ac x ab points out of screen.
+			3. find vector from camera to a (camera_position - a)
+			4. find backface culling by dot product of normal and camera to a
+				4.1 its on back if dit product is less than zero.
+		*/
+
+		vec3_t vector_a = transformed_vertices[0]; /*   A   */
+		vec3_t vector_b = transformed_vertices[1]; /*  / \  */
+		vec3_t vector_c = transformed_vertices[2]; /* C---B */
+
+		// Get the vector subtraction of B-A and C-A
+		vec3_t vector_ab = vec3_t::vec3_sub(vector_b, vector_a);
+		vec3_t vector_ac = vec3_t::vec3_sub(vector_c, vector_a);
+		vector_ab.vec3_normalize();
+		vector_ac.vec3_normalize();
+
+		// Compute the face normal (using cross product to find perpendicular)
+		vec3_t normal = vec3_t::vec3_cross(vector_ab, vector_ac);
+		normal.vec3_normalize();
+
+		// Find the vector between vertex A in the triangle and the camera origin
+		vec3_t camera_ray = vec3_t::vec3_sub(camera_position, vector_a);
+
+		// Calculate how aligned the camera ray is with the face normal (using dot product)
+		float dot_normal_camera = vec3_t::vec3_dot(normal, camera_ray);
+
+		// Bypass the triangles that are looking away from the camera
+		if (dot_normal_camera < 0) {
+			continue;
+		}
+
+		triangle_t projected_triangle; // project face [3D] to triangle [2D] and store it here
+
+		for (int j = 0; j < 3; j++) {
 			// Project the current vertex
-			vec2_t projected_point = project(transformed_vertex);
+			vec2_t projected_point = project(transformed_vertices[j]);
 
 			// Scale and translate the projected points to the middle of the screen
 			projected_point.x += (display.window_width / 2);

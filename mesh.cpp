@@ -1,4 +1,8 @@
 #include "mesh.h"
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 static const int N_CUBE_VERTICES = 8;
 static const int N_CUBE_FACES = (6 * 2); // 6 cube faces, 2 triangles per face
@@ -44,3 +48,41 @@ void mesh_t::load_cube_mesh_data(void) {
 	vertices.assign(cube_mesh_vertices, cube_mesh_vertices + N_CUBE_VERTICES);
 	faces.assign(cube_mesh_faces, cube_mesh_faces + N_CUBE_FACES);
 }
+
+void mesh_t::load_obj_file_data(const std::string& path) {
+    std::ifstream file(path);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open OBJ file: " + path);
+	}
+
+	vertices.clear();
+	faces.clear();
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream line_stream(line);
+        std::string word;
+        
+        if (!(line_stream >> word)) {
+			continue; // skip empty lines
+        }
+
+        if (word == "v") {
+            vec3_t vertex;
+            line_stream >> vertex.x >> vertex.y >> vertex.z;
+            vertices.push_back(vertex);
+        } else if (word == "f") {
+            face_t face;
+            char slash; // to handle possible texture/normal indices
+            int dummy_num;
+            line_stream >> face.a >> slash >> dummy_num >> slash >> dummy_num
+                        >> face.b >> slash >> dummy_num >> slash >> dummy_num
+                        >> face.c;
+            faces.push_back(face);
+		}
+    }
+
+    file.close();
+}
+
