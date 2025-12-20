@@ -10,6 +10,8 @@ public:
     std::vector<vec3_t> vertices;
 	std::vector<face_t> faces;
     vec3_t rotation{0,0,0};
+    vec3_t scale{1,1,1};
+    vec3_t translation{0,0,0};
 
     void load_cube_mesh_data(void);
     void load_obj_file_data(const std::string & path);

@@ -1,4 +1,7 @@
 #pragma once
+
+class vec4_t; // Forward Declaration
+
 class vec2_t
 {
 public:
@@ -40,8 +43,19 @@ public:
 	static vec3_t vec3_cross(vec3_t a, vec3_t b);
 	static float vec3_dot(vec3_t a, vec3_t b);
 
-
-
 };
+
+class vec4_t {
+public:
+	float x, y, z, w;
+
+	vec4_t(float _x = 0.f, float _y = 0.f, float _z = 0.f, float _w = 0.f) : x(_x), y(_y), z(_z), w(_w) {};
+	
+};
+
+
+vec4_t vec4_from_vec3(vec3_t v);
+vec3_t vec3_from_vec4(vec4_t v);
+
 
 

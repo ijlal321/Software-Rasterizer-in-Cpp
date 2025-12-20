@@ -1,0 +1,20 @@
+#pragma once
+#include "vector.h"
+
+class mat4_t
+{
+public:
+	float m[4][4];
+
+	static mat4_t mat4_identity(void);
+	static mat4_t mat4_make_scale(float sx, float sy, float sz);
+	static mat4_t mat4_make_translation(float tx, float ty, float tz);
+	static mat4_t mat4_make_rotation_x(float angle);
+	static mat4_t mat4_make_rotation_y(float angle);
+	static mat4_t mat4_make_rotation_z(float angle);
+	static vec4_t mat4_mul_vec4(mat4_t m, vec4_t v);
+	static mat4_t mat4_mul_mat4(mat4_t a, mat4_t b);
+
+
+};
+

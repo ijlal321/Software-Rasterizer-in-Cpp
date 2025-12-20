@@ -1,10 +1,11 @@
 #include <iostream>
 #include <vector>
 #include <SDL.h>
+#include <algorithm>
 #include "display.h"
 #include "vector.h"
 #include "Mesh.h"
-#include <algorithm>
+# include "matrix.h"
 
 
 std::vector<triangle_t> triangles_to_render; // triangles given to 
@@ -52,11 +53,12 @@ void process_input() {
 void setup() {
 	// Initialize render mode and triangle culling method
 	display.render_method = Render_Method::RENDER_WIRE;
-	display.cull_method = Cull_Method::CULL_BACKFACE;
+	display.cull_method = Cull_Method::CULL_NONE;
 
 	display.setup();
 	cube_mesh.load_cube_mesh_data();
 	//cube_mesh.load_obj_file_data("assets/cube.obj");
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,49 +82,57 @@ void update(void) {
 	}
 	previous_frame_time = SDL_GetTicks();
 
-	cube_mesh.rotation.x += 0.01f;
-	cube_mesh.rotation.y += 0.01f;
-	cube_mesh.rotation.z += 0.01f;
+	// Change the mesh scale, rotation, and translation values per animation frame
+	cube_mesh.rotation.x += 0.01;
+	cube_mesh.rotation.y += 0.01;
+	cube_mesh.rotation.z += 0.01;
+	cube_mesh.translation.z = 5.0;
 
-	/*
-		1. Get each face
-		2. get 3 vertices [3d] of a face.
-		3. rotate vertices [3d] (according to rotation)
-		3.5. move object back away from camera.
-		4. check back face culling of face
-		5. Project to 2d.
-		6. store in triangles to renfer
+	// Create scale, rotation, and translation matrices that will be used to multiply the mesh vertices
+	mat4_t scale_matrix = mat4_t::mat4_make_scale(cube_mesh.scale.x, cube_mesh.scale.y, cube_mesh.scale.z);
+	mat4_t translation_matrix = mat4_t::mat4_make_translation(cube_mesh.translation.x, cube_mesh.translation.y, cube_mesh.translation.z);
+	mat4_t rotation_matrix_x = mat4_t::mat4_make_rotation_x(cube_mesh.rotation.x);
+	mat4_t rotation_matrix_y = mat4_t::mat4_make_rotation_y(cube_mesh.rotation.y);
+	mat4_t rotation_matrix_z = mat4_t::mat4_make_rotation_z(cube_mesh.rotation.z);
 
-	*/
+
 	for (int i = 0; i < cube_mesh.faces.size(); i++) {
 		face_t mesh_face = cube_mesh.faces[i]; // get face [3d] from mesh
 		
-		vec3_t mesh_vertices[3]; // store vertexes of face
-		mesh_vertices[0] = cube_mesh.vertices[mesh_face.a - 1];
-		mesh_vertices[1] = cube_mesh.vertices[mesh_face.b - 1];
-		mesh_vertices[2] = cube_mesh.vertices[mesh_face.c - 1];
+		vec3_t face_vertices[3]; // store vertexes of face
+		face_vertices[0] = cube_mesh.vertices[mesh_face.a - 1];
+		face_vertices[1] = cube_mesh.vertices[mesh_face.b - 1];
+		face_vertices[2] = cube_mesh.vertices[mesh_face.c - 1];
+
+		vec4_t transformed_vertices[3];
 
 		// Loop all three vertices of this current face and apply transformations
-		vec3_t transformed_vertices[3];
+
 		for (int j = 0; j < 3; j++) {
-			vec3_t transformed_vertex = mesh_vertices[j];
+			vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
 
-			// Apply rotation
-			transformed_vertex.vec3_rotate_x(cube_mesh.rotation.x);
-			transformed_vertex.vec3_rotate_y(cube_mesh.rotation.y);
-			transformed_vertex.vec3_rotate_z(cube_mesh.rotation.z);
+			// Create a World Matrix combining scale, rotation, and translation matrices
+			mat4_t world_matrix = mat4_t::mat4_identity();
 
-			// Translate the vertex away from the camera
-			transformed_vertex.z += 5;
+			// Order matters: First scale, then rotate, then translate. [T]*[R]*[S]*v
+			world_matrix = mat4_t::mat4_mul_mat4(scale_matrix, world_matrix);
+			world_matrix = mat4_t::mat4_mul_mat4(rotation_matrix_z, world_matrix);
+			world_matrix = mat4_t::mat4_mul_mat4(rotation_matrix_y, world_matrix);
+			world_matrix = mat4_t::mat4_mul_mat4(rotation_matrix_x, world_matrix);
+			world_matrix = mat4_t::mat4_mul_mat4(translation_matrix, world_matrix);
 
+			// Multiply the world matrix by the original vector
+			transformed_vertex = mat4_t::mat4_mul_vec4(world_matrix, transformed_vertex);
+
+			// Save transformed vertex in the array of transformed vertices
 			transformed_vertices[j] = transformed_vertex;
 		}
 
 		// Backface culling test to see if the current face should be projected
 		if (display.cull_method == Cull_Method::CULL_BACKFACE) {
-			vec3_t vector_a = transformed_vertices[0]; /*   A   */
-			vec3_t vector_b = transformed_vertices[1]; /*  / \  */
-			vec3_t vector_c = transformed_vertices[2]; /* C---B */
+			vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]); /*   A   */
+			vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]); /*  / \  */
+			vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]); /* C---B */
 
 			// Get the vector subtraction of B-A and C-A
 			vec3_t vector_ab = vec3_t::vec3_sub(vector_b, vector_a);
@@ -146,28 +156,36 @@ void update(void) {
 			}
 		}
 
-		triangle_t projected_triangle; // project face [3D] to triangle [2D] and store it here
+		vec2_t projected_points[3];
 
+		// Loop all three vertices to perform projection
 		for (int j = 0; j < 3; j++) {
 			// Project the current vertex
-			vec2_t projected_point = project(transformed_vertices[j]);
+			projected_points[j] = project(vec3_from_vec4(transformed_vertices[j]));
 
 			// Scale and translate the projected points to the middle of the screen
-			projected_point.x += (display.window_width / 2);
-			projected_point.y += (display.window_height / 2);
-
-			projected_triangle.points[j] = projected_point;
-
+			projected_points[j].x += (display.window_width / 2);
+			projected_points[j].y += (display.window_height / 2);
 		}
 
-		projected_triangle.color = mesh_face.color;
-		projected_triangle.avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0f;
+
+		// Calculate the average depth for each face based on the vertices after transformation
+		float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0;
+
+		triangle_t projected_triangle = {
+			{
+				{ projected_points[0].x, projected_points[0].y },
+				{ projected_points[1].x, projected_points[1].y },
+				{ projected_points[2].x, projected_points[2].y },
+			},
+			mesh_face.color,
+			avg_depth
+		};
 
 		// Save the projected triangle in the array of triangles to render
 		triangles_to_render.push_back(projected_triangle);
 
 	}
-
 }
 
 void render() {
