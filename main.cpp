@@ -16,8 +16,8 @@ std::vector<uint32_t> color_buffer;
 Display display (color_buffer);
 
 vec3_t camera_position = { 0, 0, 0 };
+mat4_t proj_matrix;
 
-float fov_factor = 640;
 int previous_frame_time = 0;
 
 void process_input() {
@@ -56,21 +56,17 @@ void setup() {
 	display.cull_method = Cull_Method::CULL_NONE;
 
 	display.setup();
+
+	// Initialize the perspective projection matrix
+	float fov = M_PI / 3.0; // the same as 180/3, or 60deg
+	float aspect = (float)display.window_height / (float)display.window_width;
+	float znear = 0.1;
+	float zfar = 100.0;
+	proj_matrix = mat4_t::mat4_make_perspective(fov, aspect, znear, zfar);
+
 	cube_mesh.load_cube_mesh_data();
 	//cube_mesh.load_obj_file_data("assets/cube.obj");
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Function that receives a 3D vector and returns a projected 2D point
-////////////////////////////////////////////////////////////////////////////////
-vec2_t project(vec3_t point) {
-	//std::cout << "x-> " << point.x << " y-> " << point.y << " z-> " << point.z << std::endl;
-	vec2_t projected_point{
-		(fov_factor * point.x) / point.z, 
-		(fov_factor * point.y)/ point.z 
-	};
-	return projected_point;
 }
 
 void update(void) {
@@ -156,14 +152,19 @@ void update(void) {
 			}
 		}
 
-		vec2_t projected_points[3];
+		vec4_t projected_points[3];
 
 		// Loop all three vertices to perform projection
 		for (int j = 0; j < 3; j++) {
 			// Project the current vertex
-			projected_points[j] = project(vec3_from_vec4(transformed_vertices[j]));
+			//projected_points[j] = project(vec3_from_vec4(transformed_vertices[j]));
+			projected_points[j] = mat4_t::mat4_mul_vec4_project(proj_matrix, transformed_vertices[j]);
 
-			// Scale and translate the projected points to the middle of the screen
+			// Scale into the view
+			projected_points[j].x *= (display.window_width / 2.0);
+			projected_points[j].y *= (display.window_height / 2.0);
+
+			// Translate the projected points to the middle of the screen
 			projected_points[j].x += (display.window_width / 2);
 			projected_points[j].y += (display.window_height / 2);
 		}
