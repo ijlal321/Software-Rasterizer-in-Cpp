@@ -20,23 +20,23 @@ static vec3_t cube_mesh_vertices[N_CUBE_VERTICES] = {
 
 static face_t cube_mesh_faces[N_CUBE_FACES] = {
     // front
-    { 1,  2,  3, 0xFFFF0000},
-    { 1,  3,  4, 0xFFFF0000},
+    { 1,  2,  3, 0xFFFFFFFF},
+    { 1,  3,  4, 0xFFFFFFFF},
     // right
-    { 4,  3,  5, 0xFF00FF00},
-    { 4,  5,  6, 0xFF00FF00},
+    { 4,  3,  5, 0xFFFFFFFF},
+    { 4,  5,  6, 0xFFFFFFFF},
     // back
-    { 6,  5,  7, 0xFF0000FF},
-    { 6,  7,  8, 0xFF0000FF},
+    { 6,  5,  7, 0xFFFFFFFF},
+    { 6,  7,  8, 0xFFFFFFFF},
     // left
-    { 8,  7,  2, 0xFFFFFF00},
-    { 8,  2,  1, 0xFFFFFF00},
+    { 8,  7,  2, 0xFFFFFFFF},
+    { 8,  2,  1, 0xFFFFFFFF},
     // top
-    { 2,  7,  5, 0xFFFF00FF},
-    { 2,  5,  3, 0xFFFF00FF},
+    { 2,  7,  5, 0xFFFFFFFF},
+    { 2,  5,  3, 0xFFFFFFFF},
     // bottom
-    { 6,  8,  1, 0xFF00FFFF},
-    { 6,  1,  4, 0xFF00FFFF}
+    { 6,  8,  1, 0xFFFFFFFF},
+    { 6,  1,  4, 0xFFFFFFFF}
 };
 
 
@@ -79,6 +79,7 @@ void mesh_t::load_obj_file_data(const std::string& path) {
             line_stream >> face.a >> slash >> dummy_num >> slash >> dummy_num
                         >> face.b >> slash >> dummy_num >> slash >> dummy_num
                         >> face.c;
+            face.color = 0xFFFFFFFF;
             faces.push_back(face);
 		}
     }

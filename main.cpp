@@ -17,7 +17,7 @@ Display display (color_buffer);
 
 vec3_t camera_position = { 0, 0, 0 };
 mat4_t proj_matrix;
-light_t main_light = { {1, 0, 1} };
+light_t main_light = { {0, 0, 1} };
 
 int previous_frame_time = 0;
 
@@ -65,8 +65,9 @@ void setup() {
 	float zfar = 100.0;
 	proj_matrix = mat4_t::mat4_make_perspective(fov, aspect, znear, zfar);
 
-	cube_mesh.load_cube_mesh_data();
+	//cube_mesh.load_cube_mesh_data();
 	//cube_mesh.load_obj_file_data("assets/cube.obj");
+	cube_mesh.load_obj_file_data("assets/f22.obj");
 
 }
 
@@ -80,10 +81,10 @@ void update(void) {
 	previous_frame_time = SDL_GetTicks();
 
 	// Change the mesh scale, rotation, and translation values per animation frame
-	cube_mesh.rotation.x += 0.01;
-	cube_mesh.rotation.y += 0.01;
-	cube_mesh.rotation.z += 0.01;
-	cube_mesh.translation.z = 5.0;
+	cube_mesh.rotation.x += 0.01f;
+	//cube_mesh.rotation.y += 0.01;
+	//cube_mesh.rotation.z += 0.01;
+	cube_mesh.translation.z = 5.0f;
 
 	// Create scale, rotation, and translation matrices that will be used to multiply the mesh vertices
 	mat4_t scale_matrix = mat4_t::mat4_make_scale(cube_mesh.scale.x, cube_mesh.scale.y, cube_mesh.scale.z);
@@ -126,7 +127,7 @@ void update(void) {
 			transformed_vertices[j] = transformed_vertex;
 		}
 
-		// calculations to find normal of vector - Used in backface culling and light shading
+		// Get individual vectors from A, B, and C vertices to compute normal
 		vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]); /*   A   */
 		vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]); /*  / \  */
 		vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]); /* C---B */
@@ -156,25 +157,6 @@ void update(void) {
 			}
 		}
 
-		// find new color of vertex based on dot product of normal with light
-		{
-			// Todo: reverse light ray or mesh vectors.
-			
-			vec3_t reversed_light = { -main_light.direction.x, -main_light.direction.y, -main_light.direction.z };
-			reversed_light.vec3_normalize();
-			// Calculate how aligned the light ray is with the face normal (using dot product)
-			float dot_normal_light = vec3_t::vec3_dot(normal, reversed_light);
-			uint32_t new_color = light_t::light_apply_intensity(mesh_face.color, dot_normal_light);
-			//if (i == 0) {
-			//	std::cout << "dot product -> " << dot_normal_light << std::endl;
-			//	std::cout << "x -> " << reversed_light.x << " " << normal.x << "  ";
-			//	std::cout << "y -> " << reversed_light.y << " " << normal.y << "  ";
-			//	std::cout << "z -> " << reversed_light.z << " " << normal.z << std::endl;;
-			//	std::getchar();
-			//}
-			mesh_face.color = new_color;
-		}
-
 		vec4_t projected_points[3];
 
 		// Loop all three vertices to perform projection
@@ -184,8 +166,8 @@ void update(void) {
 			projected_points[j] = mat4_t::mat4_mul_vec4_project(proj_matrix, transformed_vertices[j]);
 
 			// Scale into the view
-			projected_points[j].x *= (display.window_width / 2.0);
-			projected_points[j].y *= (display.window_height / 2.0);
+			projected_points[j].x *= (display.window_width / 2.0f);
+			projected_points[j].y *= (display.window_height / 2.0f);
 
 			// Translate the projected points to the middle of the screen
 			projected_points[j].x += (display.window_width / 2);
@@ -196,13 +178,40 @@ void update(void) {
 		// Calculate the average depth for each face based on the vertices after transformation
 		float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0;
 
+		//// find new color of vertex based on dot product of normal with light
+		//{
+		//	// Reverse light ray or mesh vectors.
+
+		//	vec3_t reversed_light = { -main_light.direction.x, -main_light.direction.y, -main_light.direction.z };
+		//	//reversed_light.vec3_normalize();
+		//	// Calculate how aligned the light ray is with the face normal (using dot product)
+		//	float dot_normal_light = vec3_t::vec3_dot(normal, reversed_light);
+		//	uint32_t new_color = light_t::light_apply_intensity(mesh_face.color, dot_normal_light);
+		//	//if (i == 0) {
+		//	//	std::cout << "dot product -> " << dot_normal_light << std::endl;
+		//	//	std::cout << "x -> " << reversed_light.x << " " << normal.x << "  ";
+		//	//	std::cout << "y -> " << reversed_light.y << " " << normal.y << "  ";
+		//	//	std::cout << "z -> " << reversed_light.z << " " << normal.z << std::endl;;
+		//	//	std::getchar();
+		//	//}
+		//	mesh_face.color = new_color;
+		//}
+
+
+		// Calculate the shade intensity based on how aliged is the face normal and the opposite of the light direction
+		float light_intensity_factor = -vec3_t::vec3_dot(normal, main_light.direction);
+
+		// Calculate the triangle color based on the light angle
+		uint32_t triangle_color = light_t::light_apply_intensity(mesh_face.color, light_intensity_factor);
+
+
 		triangle_t projected_triangle = {
 			{
 				{ projected_points[0].x, projected_points[0].y },
 				{ projected_points[1].x, projected_points[1].y },
 				{ projected_points[2].x, projected_points[2].y },
 			},
-			mesh_face.color,
+			triangle_color,
 			avg_depth
 		};
 
