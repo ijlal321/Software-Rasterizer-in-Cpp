@@ -1,5 +1,4 @@
 #pragma once
-
 class vec4_t; // Forward Declaration
 
 class vec2_t
@@ -56,6 +55,5 @@ public:
 
 vec4_t vec4_from_vec3(vec3_t v);
 vec3_t vec3_from_vec4(vec4_t v);
-
 
 

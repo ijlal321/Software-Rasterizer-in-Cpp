@@ -6,7 +6,7 @@
 #include "vector.h"
 #include "Mesh.h"
 # include "matrix.h"
-
+#include "light.h"
 
 std::vector<triangle_t> triangles_to_render; // triangles given to 
 mesh_t cube_mesh;  // Main Object we Display
@@ -17,6 +17,7 @@ Display display (color_buffer);
 
 vec3_t camera_position = { 0, 0, 0 };
 mat4_t proj_matrix;
+light_t main_light = { {1, 0, 1} };
 
 int previous_frame_time = 0;
 
@@ -52,8 +53,8 @@ void process_input() {
 
 void setup() {
 	// Initialize render mode and triangle culling method
-	display.render_method = Render_Method::RENDER_WIRE;
-	display.cull_method = Cull_Method::CULL_NONE;
+	display.render_method = Render_Method::RENDER_FILL_TRIANGLE_WIRE;
+	display.cull_method = Cull_Method::CULL_BACKFACE;
 
 	display.setup();
 
@@ -93,6 +94,7 @@ void update(void) {
 
 
 	for (int i = 0; i < cube_mesh.faces.size(); i++) {
+	//for (int i = 0; i < 1; i++) {
 		face_t mesh_face = cube_mesh.faces[i]; // get face [3d] from mesh
 		
 		vec3_t face_vertices[3]; // store vertexes of face
@@ -124,24 +126,26 @@ void update(void) {
 			transformed_vertices[j] = transformed_vertex;
 		}
 
+		// calculations to find normal of vector - Used in backface culling and light shading
+		vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]); /*   A   */
+		vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]); /*  / \  */
+		vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]); /* C---B */
+
+		// Get the vector subtraction of B-A and C-A
+		vec3_t vector_ab = vec3_t::vec3_sub(vector_b, vector_a);
+		vec3_t vector_ac = vec3_t::vec3_sub(vector_c, vector_a);
+		vector_ab.vec3_normalize();
+		vector_ac.vec3_normalize();
+
+		// Compute the face normal (using cross product to find perpendicular)
+		vec3_t normal = vec3_t::vec3_cross(vector_ab, vector_ac);
+		normal.vec3_normalize();
+
+		// Find the vector between vertex A in the triangle and the camera origin
+		vec3_t camera_ray = vec3_t::vec3_sub(camera_position, vector_a);
+
 		// Backface culling test to see if the current face should be projected
 		if (display.cull_method == Cull_Method::CULL_BACKFACE) {
-			vec3_t vector_a = vec3_from_vec4(transformed_vertices[0]); /*   A   */
-			vec3_t vector_b = vec3_from_vec4(transformed_vertices[1]); /*  / \  */
-			vec3_t vector_c = vec3_from_vec4(transformed_vertices[2]); /* C---B */
-
-			// Get the vector subtraction of B-A and C-A
-			vec3_t vector_ab = vec3_t::vec3_sub(vector_b, vector_a);
-			vec3_t vector_ac = vec3_t::vec3_sub(vector_c, vector_a);
-			vector_ab.vec3_normalize();
-			vector_ac.vec3_normalize();
-
-			// Compute the face normal (using cross product to find perpendicular)
-			vec3_t normal = vec3_t::vec3_cross(vector_ab, vector_ac);
-			normal.vec3_normalize();
-
-			// Find the vector between vertex A in the triangle and the camera origin
-			vec3_t camera_ray = vec3_t::vec3_sub(camera_position, vector_a);
 
 			// Calculate how aligned the camera ray is with the face normal (using dot product)
 			float dot_normal_camera = vec3_t::vec3_dot(normal, camera_ray);
@@ -150,6 +154,25 @@ void update(void) {
 			if (dot_normal_camera < 0) {
 				continue;
 			}
+		}
+
+		// find new color of vertex based on dot product of normal with light
+		{
+			// Todo: reverse light ray or mesh vectors.
+			
+			vec3_t reversed_light = { -main_light.direction.x, -main_light.direction.y, -main_light.direction.z };
+			reversed_light.vec3_normalize();
+			// Calculate how aligned the light ray is with the face normal (using dot product)
+			float dot_normal_light = vec3_t::vec3_dot(normal, reversed_light);
+			uint32_t new_color = light_t::light_apply_intensity(mesh_face.color, dot_normal_light);
+			//if (i == 0) {
+			//	std::cout << "dot product -> " << dot_normal_light << std::endl;
+			//	std::cout << "x -> " << reversed_light.x << " " << normal.x << "  ";
+			//	std::cout << "y -> " << reversed_light.y << " " << normal.y << "  ";
+			//	std::cout << "z -> " << reversed_light.z << " " << normal.z << std::endl;;
+			//	std::getchar();
+			//}
+			mesh_face.color = new_color;
 		}
 
 		vec4_t projected_points[3];
