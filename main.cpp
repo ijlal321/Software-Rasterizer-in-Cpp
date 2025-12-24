@@ -169,6 +169,8 @@ void update(void) {
 			projected_points[j].x *= (display.window_width / 2.0f);
 			projected_points[j].y *= (display.window_height / 2.0f);
 
+			projected_points[j].y *= -1; // Invert Y axis
+
 			// Translate the projected points to the middle of the screen
 			projected_points[j].x += (display.window_width / 2);
 			projected_points[j].y += (display.window_height / 2);
@@ -177,25 +179,6 @@ void update(void) {
 
 		// Calculate the average depth for each face based on the vertices after transformation
 		float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0;
-
-		//// find new color of vertex based on dot product of normal with light
-		//{
-		//	// Reverse light ray or mesh vectors.
-
-		//	vec3_t reversed_light = { -main_light.direction.x, -main_light.direction.y, -main_light.direction.z };
-		//	//reversed_light.vec3_normalize();
-		//	// Calculate how aligned the light ray is with the face normal (using dot product)
-		//	float dot_normal_light = vec3_t::vec3_dot(normal, reversed_light);
-		//	uint32_t new_color = light_t::light_apply_intensity(mesh_face.color, dot_normal_light);
-		//	//if (i == 0) {
-		//	//	std::cout << "dot product -> " << dot_normal_light << std::endl;
-		//	//	std::cout << "x -> " << reversed_light.x << " " << normal.x << "  ";
-		//	//	std::cout << "y -> " << reversed_light.y << " " << normal.y << "  ";
-		//	//	std::cout << "z -> " << reversed_light.z << " " << normal.z << std::endl;;
-		//	//	std::getchar();
-		//	//}
-		//	mesh_face.color = new_color;
-		//}
 
 
 		// Calculate the shade intensity based on how aliged is the face normal and the opposite of the light direction
