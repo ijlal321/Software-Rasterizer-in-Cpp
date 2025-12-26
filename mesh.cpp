@@ -20,23 +20,23 @@ static vec3_t cube_mesh_vertices[N_CUBE_VERTICES] = {
 
 static face_t cube_mesh_faces[N_CUBE_FACES] = {
     // front
-    { 1,  2,  3, 0xFFFFFFFF},
-    { 1,  3,  4, 0xFFFFFFFF},
+    { 1,  2,  3, { 0, 0 }, { 0, 1 }, { 1, 1 }, 0xFFFFFFFF},
+    { 1,  3,  4, { 0, 0 }, { 1, 1 }, { 1, 0 }, 0xFFFFFFFF},
     // right
-    { 4,  3,  5, 0xFFFFFFFF},
-    { 4,  5,  6, 0xFFFFFFFF},
+    { 4,  3,  5, { 0, 0 }, { 0, 1 }, { 1, 1 }, 0xFFFFFFFF},
+    { 4,  5,  6, { 0, 0 }, { 1, 1 }, { 1, 0 }, 0xFFFFFFFF},
     // back
-    { 6,  5,  7, 0xFFFFFFFF},
-    { 6,  7,  8, 0xFFFFFFFF},
+    { 6,  5,  7, { 0, 0 }, { 0, 1 }, { 1, 1 }, 0xFFFFFFFF},
+    { 6,  7,  8, { 0, 0 }, { 1, 1 }, { 1, 0 }, 0xFFFFFFFF},
     // left
-    { 8,  7,  2, 0xFFFFFFFF},
-    { 8,  2,  1, 0xFFFFFFFF},
+    { 8,  7,  2, { 0, 0 }, { 0, 1 }, { 1, 1 }, 0xFFFFFFFF},
+    { 8,  2,  1, { 0, 0 }, { 1, 1 }, { 1, 0 }, 0xFFFFFFFF},
     // top
-    { 2,  7,  5, 0xFFFFFFFF},
-    { 2,  5,  3, 0xFFFFFFFF},
+    { 2,  7,  5, { 0, 0 }, { 0, 1 }, { 1, 1 }, 0xFFFFFFFF},
+    { 2,  5,  3, { 0, 0 }, { 1, 1 }, { 1, 0 }, 0xFFFFFFFF},
     // bottom
-    { 6,  8,  1, 0xFFFFFFFF},
-    { 6,  1,  4, 0xFFFFFFFF}
+    { 6,  8,  1, { 0, 0 }, { 0, 1 }, { 1, 1 }, 0xFFFFFFFF},
+    { 6,  1,  4, { 0, 0 }, { 1, 1 }, { 1, 0 }, 0xFFFFFFFF}
 };
 
 

@@ -7,6 +7,7 @@
 #include "Mesh.h"
 # include "matrix.h"
 #include "light.h"
+#include "texture.h"
 
 std::vector<triangle_t> triangles_to_render; // triangles given to 
 mesh_t cube_mesh;  // Main Object we Display
@@ -14,6 +15,8 @@ mesh_t cube_mesh;  // Main Object we Display
 bool is_running = false;
 std::vector<uint32_t> color_buffer;
 Display display (color_buffer);
+
+tex2_t texture_to_load;
 
 vec3_t camera_position = { 0, 0, 0 };
 mat4_t proj_matrix;
@@ -53,7 +56,7 @@ void process_input() {
 
 void setup() {
 	// Initialize render mode and triangle culling method
-	display.render_method = Render_Method::RENDER_FILL_TRIANGLE_WIRE;
+	display.render_method = Render_Method::RENDER_WIRE_VERTEX;
 	display.cull_method = Cull_Method::CULL_BACKFACE;
 
 	display.setup();
@@ -65,9 +68,11 @@ void setup() {
 	float zfar = 100.0;
 	proj_matrix = mat4_t::mat4_make_perspective(fov, aspect, znear, zfar);
 
-	//cube_mesh.load_cube_mesh_data();
+	texture_to_load.load_redbrick_texture();
+
+	cube_mesh.load_cube_mesh_data();
 	//cube_mesh.load_obj_file_data("assets/cube.obj");
-	cube_mesh.load_obj_file_data("assets/f22.obj");
+	//cube_mesh.load_obj_file_data("assets/f22.obj");
 
 }
 
@@ -82,7 +87,7 @@ void update(void) {
 
 	// Change the mesh scale, rotation, and translation values per animation frame
 	cube_mesh.rotation.x += 0.01f;
-	//cube_mesh.rotation.y += 0.01;
+	cube_mesh.rotation.y += 0.01f;
 	//cube_mesh.rotation.z += 0.01;
 	cube_mesh.translation.z = 5.0f;
 
@@ -102,7 +107,7 @@ void update(void) {
 		face_vertices[0] = cube_mesh.vertices[mesh_face.a - 1];
 		face_vertices[1] = cube_mesh.vertices[mesh_face.b - 1];
 		face_vertices[2] = cube_mesh.vertices[mesh_face.c - 1];
-
+	
 		vec4_t transformed_vertices[3];
 
 		// Loop all three vertices of this current face and apply transformations
@@ -194,6 +199,11 @@ void update(void) {
 				{ projected_points[1].x, projected_points[1].y },
 				{ projected_points[2].x, projected_points[2].y },
 			},
+			{
+				mesh_face.a_uv,
+				mesh_face.b_uv,
+				mesh_face.c_uv
+			},
 			triangle_color,
 			avg_depth
 		};
@@ -217,6 +227,7 @@ void render() {
 	// Loop all projected triangles and render them
 	for (int i = 0; i < triangles_to_render.size(); i++) {
 		triangle_t triangle = triangles_to_render[i];
+		
 		// Draw filled triangle
 		if (display.render_method == Render_Method::RENDER_FILL_TRIANGLE || display.render_method == Render_Method::RENDER_FILL_TRIANGLE_WIRE) {
 			triangle_t::draw_filled_triangle(display,
@@ -243,6 +254,17 @@ void render() {
 			display.draw_rect(triangle.points[1].x - 3, triangle.points[1].y - 3, 6, 6, 0xFFFF0000); // vertex B
 			display.draw_rect(triangle.points[2].x - 3, triangle.points[2].y - 3, 6, 6, 0xFFFF0000); // vertex C
 		}
+
+		display.draw_textured_triangle(texture_to_load,
+			triangle.points[0].x, triangle.points[0].y,
+			triangle.points[1].x, triangle.points[1].y,
+			triangle.points[2].x, triangle.points[2].y,
+			triangle.texcoords[0].u, triangle.texcoords[0].v,
+			triangle.texcoords[1].u, triangle.texcoords[1].v,
+			triangle.texcoords[2].u, triangle.texcoords[2].v
+			);
+
+		display.draw_simple_texture(texture_to_load, 10, 10);
 
 	}
 	triangles_to_render.clear();

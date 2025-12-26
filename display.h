@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <iostream>
 #include <vector>
+#include "texture.h"
 
 #define FPS 30 
 #define FRAME_TARGET_TIME (1000 / FPS)
@@ -51,5 +52,8 @@ public:
 	void setup();
 	void render();
 	void draw_pixel(int x, int y, uint32_t color);
+	void draw_simple_texture(tex2_t& texture, int x, int y);
+	void draw_textured_triangle(tex2_t& texture, int x0, int y0, int x1, int y1, int x2, int y2,
+		int u0, int v0, int u1, int v1, int u2, int v2);
 };
 
