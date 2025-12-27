@@ -250,9 +250,9 @@ void triangle_t::draw_textured_triangle(
     }
 
     // Create vector points and texture coords after we sort the vertices
-    vec2_t point_a = { x0, y0 };
-    vec2_t point_b = { x1, y1 };
-    vec2_t point_c = { x2, y2 };
+    vec2_t point_a { x0, y0 };
+    vec2_t point_b { x1, y1 };
+    vec2_t point_c { x2, y2 };
 
     ///////////////////////////////////////////////////////
     // Render the upper part of the triangle (flat-bottom)
