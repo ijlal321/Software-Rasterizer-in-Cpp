@@ -10,16 +10,11 @@ public:
 
 	//tex2_t() : u(0.0f), v(0.0f) {};
 
+	int texture_width{64};
+	int texture_height{64};
+	const uint32_t* mesh_texture;
 
-	int texture_width;
-	int texture_height;
-	std::vector<uint32_t> mesh_texture;
+	static const uint8_t REDBRICK_TEXTURE[];
 
-	void load_redbrick_texture();
-	
-	static const int REDBRICK_TEXTURE_WIDTH {64};
-	static const int REDBRICK_TEXTURE_HEIGHT {64};
-	static const std::vector<uint8_t> REDBRICK_TEXTURE;
 
 };
-

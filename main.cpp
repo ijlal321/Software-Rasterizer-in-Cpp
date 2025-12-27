@@ -8,6 +8,8 @@
 # include "matrix.h"
 #include "light.h"
 #include "texture.h"
+#include <iomanip>
+#include <cstdint>
 
 std::vector<triangle_t> triangles_to_render; // triangles given to 
 mesh_t cube_mesh;  // Main Object we Display
@@ -72,7 +74,11 @@ void setup() {
 	float zfar = 100.0;
 	proj_matrix = mat4_t::mat4_make_perspective(fov, aspect, znear, zfar);
 
-	texture_to_load.load_redbrick_texture();
+	//const uint32_t* pixels =
+	//	reinterpret_cast<const uint32_t*>(tex2_t::REDBRICK_TEXTURE);
+	//texture_to_load.mesh_texture = reinterpret_cast<const uint32_t*>(tex2_t::REDBRICK_TEXTURE);
+	texture_to_load.mesh_texture = (uint32_t*)tex2_t::REDBRICK_TEXTURE;
+
 
 	cube_mesh.load_cube_mesh_data();
 	//cube_mesh.load_obj_file_data("assets/cube.obj");
@@ -90,7 +96,7 @@ void update(void) {
 	previous_frame_time = SDL_GetTicks();
 
 	// Change the mesh scale, rotation, and translation values per animation frame
-	//cube_mesh.rotation.x += 0.01f;
+	cube_mesh.rotation.x += 0.01f;
 	//cube_mesh.rotation.y += 0.01f;
 	//cube_mesh.rotation.z += 0.01;
 	cube_mesh.translation.z = 5.0f;
@@ -244,11 +250,11 @@ void render() {
 
 		// Draw textured triangle
 		if (display.render_method == Render_Method::RENDER_TEXTURED || display.render_method == Render_Method::RENDER_TEXTURED_WIRE) {
-			display.draw_textured_triangle(
+			triangle_t::draw_textured_triangle(
 				triangle.points[0].x, triangle.points[0].y, triangle.texcoords[0].u, triangle.texcoords[0].v, // vertex A
 				triangle.points[1].x, triangle.points[1].y, triangle.texcoords[1].u, triangle.texcoords[1].v, // vertex B
 				triangle.points[2].x, triangle.points[2].y, triangle.texcoords[2].u, triangle.texcoords[2].v, // vertex C
-				texture_to_load
+				display, texture_to_load
 			);
 		}
 

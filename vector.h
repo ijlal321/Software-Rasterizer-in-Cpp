@@ -7,6 +7,7 @@ public:
 	float x, y;
 
 	vec2_t(float _x = 0.f, float _y = 0.f) : x(_x), y(_y) {};
+	vec2_t(int _x = 0, int _y = 0) : x(_x), y(_y) {};
 
 	int vec2_length();
 	// getting Unit Vector [just direction] = Better Optomization

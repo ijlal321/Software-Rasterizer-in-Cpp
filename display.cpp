@@ -5,13 +5,7 @@
 // Prototypes for helper functions
 // =============================
 
-void rasterize_textured_flat_bottom_triangle(tex2_t& texture, Display* display,
-	int x0, int y0, int x1, int y1, int x2, int y2,
-	int u0, int v0, int u1, int v1, int u2, int v2);
 
-void draw_straight_textured_line(tex2_t& texture, Display* display,
-	int x0, int x1, int y,
-	int u0, int u1, int v);
 
 // =============================
 // Display class function definitions
@@ -163,100 +157,4 @@ void Display::draw_pixel(int x, int y, uint32_t color) {
 		return;
 	}
 	color_buffer[(window_width * y) + x] = color;
-}
-
-
-void Display::draw_textured_triangle(
-	int x0, int y0, float u0, float v0,
-	int x1, int y1, float u1, float v1,
-	int x2, int y2, float u2, float v2,
-	tex2_t& texture
-) {
-	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
-	if (y0 > y1) {
-		std::swap(y0, y1);
-		std::swap(x0, x1);
-		std::swap(u0, u1);
-		std::swap(v0, v1);
-	}
-	if (y1 > y2) {
-		std::swap(y1, y2);
-		std::swap(x1, x2);
-		std::swap(u1, u2);
-		std::swap(v1, v2);
-	}
-	if (y0 > y1) {
-		std::swap(y0, y1);
-		std::swap(x0, x1);
-		std::swap(u0, u1);
-		std::swap(v0, v1);
-	}
-
-	// Create vector points and texture coords after we sort the vertices
-	vec2_t point_a ( x0, y0 );
-	vec2_t point_b ( x1, y1 );
-	vec2_t point_c ( x2, y2 );
-
-	///////////////////////////////////////////////////////
-	// Render the upper part of the triangle (flat-bottom)
-	///////////////////////////////////////////////////////
-	float inv_slope_1 = 0;
-	float inv_slope_2 = 0;
-
-	if (y1 - y0 != 0) inv_slope_1 = (float)(x1 - x0) / abs(y1 - y0);
-	if (y2 - y0 != 0) inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
-
-	if (y1 - y0 != 0) {
-		float tex_y_inc = (v2 - v0) / (y2 - y0);
-		for (int y = y0; y <= y1; y++) {
-			int x_start = x1 + (y - y1) * inv_slope_1;
-			int x_end = x0 + (y - y0) * inv_slope_2;
-			int tex_y = (v0 + (y - y0) * tex_y_inc) * texture.texture_width;
-			// texy 0-63 in loop. never 64. works good.
-			std::cout << tex_y << std::endl;
-				
-			if (x_end < x_start) {
-				std::swap(x_start, x_end); // swap if x_start is to the right of x_end
-			}
-
-			//std::cout << "x0 ->" << x0 << "x1 ->" << x1 << ", x2-> " << x2 << std::endl;
-
-			for (int x = x_start; x < x_end; x++) { 
-				float x_per = (x - x1) / (x2 - x1);
-				//std::cout << x_per << std::endl;
-				int tex_x = (u2 > u1 ? (u1 + (u2 - u1)) : (u2 + (u1 - u2))) * x_per;
-				//std::cout << tex_x << std::endl;
-				//uint32_t color = texture.mesh_texture[(texture.texture_width * tex_y) + tex_x];
-				// Draw our pixel with the color that comes from the texture
-				//draw_pixel(x, y, color); // debug checkerboard
-				//draw_texel(x, y, texture, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2);
-			}
-			//std::cout << std::endl;
-		}
-	}
-
-	///////////////////////////////////////////////////////
-	// Render the bottom part of the triangle (flat-top)
-	///////////////////////////////////////////////////////
-	//inv_slope_1 = 0;
-	//inv_slope_2 = 0;
-
-	//if (y2 - y1 != 0) inv_slope_1 = (float)(x2 - x1) / abs(y2 - y1);
-	//if (y2 - y0 != 0) inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
-
-	//if (y2 - y1 != 0) {
-	//	for (int y = y1; y <= y2; y++) {
-	//		int x_start = x1 + (y - y1) * inv_slope_1;
-	//		int x_end = x0 + (y - y0) * inv_slope_2;
-
-	//		if (x_end < x_start) {
-	//			int_swap(&x_start, &x_end); // swap if x_start is to the right of x_end
-	//		}
-
-	//		for (int x = x_start; x < x_end; x++) {
-	//			// Draw our pixel with the color that comes from the texture
-	//			draw_texel(x, y, texture, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2);
-	//		}
-	//	}
-	//}
 }
