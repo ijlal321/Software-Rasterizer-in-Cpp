@@ -1,4 +1,5 @@
 #include "display.h"
+#include "vector.h"
 
 // =============================
 // Prototypes for helper functions
@@ -165,31 +166,13 @@ void Display::draw_pixel(int x, int y, uint32_t color) {
 }
 
 
-void Display::draw_simple_texture(tex2_t& texture, int x, int y) {
-	int scale_x = 1, scale_y = 1;
-	for (int tex_y = 0; tex_y < texture.texture_height; tex_y++) {
-		for (int tex_x = 0; tex_x < texture.texture_width; tex_x++) {
-			uint32_t color = texture.mesh_texture[(texture.texture_width * tex_y) + tex_x];
-			draw_rect(x + tex_x * scale_x, y + tex_y * scale_y, scale_y, scale_x, color);
-		}
-	}
-}
-
-
-void Display::draw_textured_triangle(tex2_t& texture, int x0, int y0, int x1, int y1, int x2, int y2,
-	int u0, int v0, int u1, int v1, int u2, int v2) {
-	
-	// 0. normalize u,v which are just 0 and 1 now.
-	u0 *= texture.texture_width;
-	u1 *= texture.texture_width;
-	u2 *= texture.texture_width;
-	v0 *= texture.texture_height;
-	v1 *= texture.texture_height;
-	v2 *= texture.texture_height;
-
-
-
-	// 1. Sort vertices by y-coordinate ascending (y0 <= y1 <= y2)
+void Display::draw_textured_triangle(
+	int x0, int y0, float u0, float v0,
+	int x1, int y1, float u1, float v1,
+	int x2, int y2, float u2, float v2,
+	tex2_t& texture
+) {
+	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
 	if (y0 > y1) {
 		std::swap(y0, y1);
 		std::swap(x0, x1);
@@ -209,124 +192,71 @@ void Display::draw_textured_triangle(tex2_t& texture, int x0, int y0, int x1, in
 		std::swap(v0, v1);
 	}
 
-	// ISSUE IN GIGHUB ONE HERE, LAST ONE HE DOES WITH Y2, BUT Y2 HAS CHANGED. IT SHOULD BE Y1.
+	// Create vector points and texture coords after we sort the vertices
+	vec2_t point_a ( x0, y0 );
+	vec2_t point_b ( x1, y1 );
+	vec2_t point_c ( x2, y2 );
 
+	///////////////////////////////////////////////////////
+	// Render the upper part of the triangle (flat-bottom)
+	///////////////////////////////////////////////////////
+	float inv_slope_1 = 0;
+	float inv_slope_2 = 0;
 
-	if (y1 == y2) {
-		// Draw flat-bottom triangle
-		rasterize_textured_flat_bottom_triangle(texture, this, x0, y0, x1, y1, x2, y2,
-			u0, v0, u1, v1, u2, v2);
-	}
-	else if (y0 == y1) {
-		// Draw flat-top triangle
-		//fill_flat_top_triangle(display, x0, y0, x1, y1, x2, y2, color);
-	}
-	else {
-		// 2. Compute Middle Points
-		// Calculate the new vertex (Mx,My) using triangle similarity
-		int My = y1;
-		int Mx = (((x2 - x0) * (y1 - y0)) / (y2 - y0)) + x0;
+	if (y1 - y0 != 0) inv_slope_1 = (float)(x1 - x0) / abs(y1 - y0);
+	if (y2 - y0 != 0) inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
 
-		int Mv = v1;
-		//int Mu = (((u2 - u0) * (v1 - v0)) / (v2 - v0)) + u0;
-		int Mu = ((u2 + u0) / 2);
+	if (y1 - y0 != 0) {
+		float tex_y_inc = (v2 - v0) / (y2 - y0);
+		for (int y = y0; y <= y1; y++) {
+			int x_start = x1 + (y - y1) * inv_slope_1;
+			int x_end = x0 + (y - y0) * inv_slope_2;
+			int tex_y = (v0 + (y - y0) * tex_y_inc) * texture.texture_width;
+			// texy 0-63 in loop. never 64. works good.
+			std::cout << tex_y << std::endl;
+				
+			if (x_end < x_start) {
+				std::swap(x_start, x_end); // swap if x_start is to the right of x_end
+			}
 
-		// 3. Rasterize Top Half (v0, v1, M) [Flat bottom]
-		rasterize_textured_flat_bottom_triangle(texture, this, x0, y0, x1, y1, Mx, My,
-			u0, v0, u1, v1, Mu, Mv);
-	}
+			//std::cout << "x0 ->" << x0 << "x1 ->" << x1 << ", x2-> " << x2 << std::endl;
 
-}
-
-
-// BIRTH OF SCALING ALGORITHM FOR TEXTURE MAPPING ... WOOHOOO
-void rasterize_textured_flat_bottom_triangle(tex2_t& texture, Display* display,
-	int x0, int y0, int x1, int y1, int x2, int y2,
-	int u0, int v0, int u1, int v1, int u2, int v2) {
-
-	int y_inc = 1; // we move one pixel down each step
-	int nr_y_steps = y1 - y0; // total number of steps we take down
-	float l_x_inc_each_y = (float)(x1 - x0) / nr_y_steps; // how much to increment left x each step down
-	float r_x_inc_each_y = (float)(x2 - x0) / nr_y_steps; // how much to increment right x each step down
-
-	float t_y_inc = (float)(v1 - v0) / nr_y_steps; // how much to increment texture v coord each step down
-	float t_x_l_inc = (float)(u1 - u0) / nr_y_steps; // how much to increment texture u coord left side each step down
-	float t_x_r_inc = (float)(u2 - u0) / nr_y_steps; // how much to increment texture u coord right side each step down
-
-	// Start x_start and x_end from the top vertex (x0,y0)
-	float x_start = x0;
-	float x_end = x0;
-
-	float t_y = v0;
-	float t_x_start = u0;
-	float t_x_end = u0;
-
-
-	// Loop all the scanlines from top to bottom
-	for (int y = y0; y < y2; y++) {
-		if (round(t_y) == 0)
-			continue;
-			
-		// print all information being passed to function
-		//std::cout << "Drawing scanline at y=" << y << " from x_start=" << round(x_start) << " to x_end=" << round(x_end)
-		//	<< " with texture coords u_start=" << round(t_x_start) << ", u_end=" << round(t_x_end) << ", v=" << round(t_y) << std::endl;
-
-		draw_straight_textured_line(texture, display,
-			round(x_start), round(x_end), y,
-			round(t_x_start), round(t_x_end), round(t_y));
-		x_start += l_x_inc_each_y;
-		x_end += r_x_inc_each_y;
-
-		t_y += t_y_inc;
-		t_x_start += t_x_l_inc;
-		t_x_end += t_x_r_inc;
+			for (int x = x_start; x < x_end; x++) { 
+				float x_per = (x - x1) / (x2 - x1);
+				//std::cout << x_per << std::endl;
+				int tex_x = (u2 > u1 ? (u1 + (u2 - u1)) : (u2 + (u1 - u2))) * x_per;
+				//std::cout << tex_x << std::endl;
+				//uint32_t color = texture.mesh_texture[(texture.texture_width * tex_y) + tex_x];
+				// Draw our pixel with the color that comes from the texture
+				//draw_pixel(x, y, color); // debug checkerboard
+				//draw_texel(x, y, texture, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2);
+			}
+			//std::cout << std::endl;
+		}
 	}
 
+	///////////////////////////////////////////////////////
+	// Render the bottom part of the triangle (flat-top)
+	///////////////////////////////////////////////////////
+	//inv_slope_1 = 0;
+	//inv_slope_2 = 0;
 
-	return;
-}
+	//if (y2 - y1 != 0) inv_slope_1 = (float)(x2 - x1) / abs(y2 - y1);
+	//if (y2 - y0 != 0) inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
 
-void draw_straight_textured_line(tex2_t& texture, Display* display,
-	int x0, int x1, int y,
-	int u0, int u1, int v) {
+	//if (y2 - y1 != 0) {
+	//	for (int y = y1; y <= y2; y++) {
+	//		int x_start = x1 + (y - y1) * inv_slope_1;
+	//		int x_end = x0 + (y - y0) * inv_slope_2;
 
-	// print u0 u1 and v
-    //std::cout << "u0: " << u0 << ", u1: " << u1 << ", v: " << v << std::endl;
+	//		if (x_end < x_start) {
+	//			int_swap(&x_start, &x_end); // swap if x_start is to the right of x_end
+	//		}
 
-	int left_x, right_x;
-	int left_u, right_u;
-
-	if (x0 < x1) {
-		left_x = x0;
-		right_x = x1;
-		left_u = u0;
-		right_u = u1;
-	}
-	else {
-		left_x = x1;
-		right_x = x0;
-		left_u = u1;
-		right_u = u0;
-	}
-	if (right_x == left_x) {
-		return; // avoid division by zero
-	}
-
-	int delta_x = right_x - left_x; // nr of steps we take horizontally [given inc of each step is 1]
-
-	float u_inc = (float)(right_u - left_u) / delta_x; // how much to increment texture u coord each step right
-
-	// print all information
-	//std::cout << "Drawing textured line from (" << left_x << "," << y << ") to (" << right_x << "," << y << ") with texture u from " << left_u << " to " << right_u << " at v=" << v << " with delta_x: " << delta_x << " incr_u: " << u_inc   << std::endl;
-	//
-	//std::cin.get();
-	int current_u = left_u;
-	//std::cout << texture.mesh_texture[64 * 64];
-	for (int x = 0; x < delta_x; x++) {
-		// Get texture color from (current_u, v)
-		uint32_t color = texture.mesh_texture[(texture.texture_width * (64-v)) + (current_u)];
-		display->draw_pixel(left_x + x, y, color);
-	
-		current_u = left_u + (u_inc * x);
-	}
+	//		for (int x = x_start; x < x_end; x++) {
+	//			// Draw our pixel with the color that comes from the texture
+	//			draw_texel(x, y, texture, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2);
+	//		}
+	//	}
+	//}
 }

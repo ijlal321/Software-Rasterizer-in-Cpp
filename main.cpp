@@ -44,6 +44,10 @@ void process_input() {
 			display.render_method = Render_Method::RENDER_FILL_TRIANGLE;
 		if (event.key.keysym.sym == SDLK_4)
 			display.render_method = Render_Method::RENDER_FILL_TRIANGLE_WIRE;
+		if (event.key.keysym.sym == SDLK_5)
+			display.render_method = Render_Method::RENDER_TEXTURED;
+		if (event.key.keysym.sym == SDLK_6)
+			display.render_method = Render_Method::RENDER_TEXTURED_WIRE;
 		if (event.key.keysym.sym == SDLK_c)
 			display.cull_method = Cull_Method::CULL_BACKFACE;
 		if (event.key.keysym.sym == SDLK_d)
@@ -56,7 +60,7 @@ void process_input() {
 
 void setup() {
 	// Initialize render mode and triangle culling method
-	display.render_method = Render_Method::RENDER_WIRE_VERTEX;
+	display.render_method = Render_Method::RENDER_TEXTURED_WIRE;
 	display.cull_method = Cull_Method::CULL_BACKFACE;
 
 	display.setup();
@@ -86,8 +90,8 @@ void update(void) {
 	previous_frame_time = SDL_GetTicks();
 
 	// Change the mesh scale, rotation, and translation values per animation frame
-	cube_mesh.rotation.x += 0.01f;
-	cube_mesh.rotation.y += 0.01f;
+	//cube_mesh.rotation.x += 0.01f;
+	//cube_mesh.rotation.y += 0.01f;
 	//cube_mesh.rotation.z += 0.01;
 	cube_mesh.translation.z = 5.0f;
 
@@ -238,8 +242,18 @@ void render() {
 			);
 		}
 
+		// Draw textured triangle
+		if (display.render_method == Render_Method::RENDER_TEXTURED || display.render_method == Render_Method::RENDER_TEXTURED_WIRE) {
+			display.draw_textured_triangle(
+				triangle.points[0].x, triangle.points[0].y, triangle.texcoords[0].u, triangle.texcoords[0].v, // vertex A
+				triangle.points[1].x, triangle.points[1].y, triangle.texcoords[1].u, triangle.texcoords[1].v, // vertex B
+				triangle.points[2].x, triangle.points[2].y, triangle.texcoords[2].u, triangle.texcoords[2].v, // vertex C
+				texture_to_load
+			);
+		}
+
 		// Draw triangle wireframe
-		if (display.render_method == Render_Method::RENDER_WIRE || display.render_method == Render_Method::RENDER_WIRE_VERTEX || display.render_method == Render_Method::RENDER_FILL_TRIANGLE) {
+		if (display.render_method == Render_Method::RENDER_WIRE || display.render_method == Render_Method::RENDER_WIRE_VERTEX || display.render_method == Render_Method::RENDER_FILL_TRIANGLE || display.render_method == Render_Method::RENDER_TEXTURED_WIRE) {
 			display.draw_triangle(
 				triangle.points[0].x, triangle.points[0].y,
 				triangle.points[1].x, triangle.points[1].y,
@@ -255,16 +269,7 @@ void render() {
 			display.draw_rect(triangle.points[2].x - 3, triangle.points[2].y - 3, 6, 6, 0xFFFF0000); // vertex C
 		}
 
-		display.draw_textured_triangle(texture_to_load,
-			triangle.points[0].x, triangle.points[0].y,
-			triangle.points[1].x, triangle.points[1].y,
-			triangle.points[2].x, triangle.points[2].y,
-			triangle.texcoords[0].u, triangle.texcoords[0].v,
-			triangle.texcoords[1].u, triangle.texcoords[1].v,
-			triangle.texcoords[2].u, triangle.texcoords[2].v
-			);
-
-		display.draw_simple_texture(texture_to_load, 10, 10);
+		
 
 	}
 	triangles_to_render.clear();
