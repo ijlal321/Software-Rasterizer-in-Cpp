@@ -19,7 +19,7 @@ bool is_running = false;
 std::vector<uint32_t> color_buffer;
 Display display (color_buffer);
 
-tex2_t texture_to_load;
+texture_t texture_to_load;
 
 vec3_t camera_position = { 0, 0, 0 };
 mat4_t proj_matrix;
@@ -78,7 +78,7 @@ void setup() {
 	//const uint32_t* pixels =
 	//	reinterpret_cast<const uint32_t*>(tex2_t::REDBRICK_TEXTURE);
 	//texture_to_load.mesh_texture = reinterpret_cast<const uint32_t*>(tex2_t::REDBRICK_TEXTURE);
-	texture_to_load.mesh_texture = (uint32_t*)tex2_t::REDBRICK_TEXTURE;
+	texture_to_load.mesh_texture = (uint32_t*)texture_t::REDBRICK_TEXTURE;
 
 
 	cube_mesh.load_cube_mesh_data();
