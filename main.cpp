@@ -10,6 +10,7 @@
 #include "texture.h"
 #include <iomanip>
 #include <cstdint>
+#include "upng.h"
 
 std::vector<triangle_t> triangles_to_render; // triangles given to 
 mesh_t cube_mesh;  // Main Object we Display
