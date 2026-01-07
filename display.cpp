@@ -132,6 +132,7 @@ void Display::render_color_buffer() {
 
 void Display::setup() {
 	color_buffer.resize(window_width * window_height);
+	z_buffer.resize(window_width * window_height);
 
 	color_buffer_texture = SDL_CreateTexture(
 		renderer,
@@ -147,7 +148,6 @@ void Display::render() {
 	//SDL_RenderClear(renderer);
 
 	render_color_buffer();
-	clear_color_buffer(0xFF000000);
 
 	SDL_RenderPresent(renderer);
 }
@@ -157,4 +157,12 @@ void Display::draw_pixel(int x, int y, uint32_t color) {
 		return;
 	}
 	color_buffer[(window_width * y) + x] = color;
+}
+
+void Display::clear_z_buffer() {
+	for (int y = 0; y < window_height; y++) {
+		for (int x = 0; x < window_width; x++) {
+			z_buffer[(window_width * y) + x] = 1.0;
+		}
+	}
 }

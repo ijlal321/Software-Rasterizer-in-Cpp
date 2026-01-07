@@ -49,41 +49,57 @@ void mesh_t::load_cube_mesh_data(void) {
 	faces.assign(cube_mesh_faces, cube_mesh_faces + N_CUBE_FACES);
 }
 
-void mesh_t::load_obj_file_data(const std::string& path) {
-    std::ifstream file(path);
+void mesh_t::load_obj_file_data(const char * path) {
+    FILE* file;
+    file = fopen(path, "r");
+    char line[1024];
 
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open OBJ file: " + path);
+    if (!file) {
+        std::cerr << "Could not open the file: " << path << std::endl;
+        return;
 	}
 
 	vertices.clear();
 	faces.clear();
 
-    std::string line;
-    while (std::getline(file, line)) {
-        std::istringstream line_stream(line);
-        std::string word;
-        
-        if (!(line_stream >> word)) {
-			continue; // skip empty lines
-        }
+    std::vector<tex2_t> texcoords;
 
-        if (word == "v") {
+    while (fgets(line, 1024, file)) {
+        // Vertex information
+        if (strncmp(line, "v ", 2) == 0) {
             vec3_t vertex;
-            line_stream >> vertex.x >> vertex.y >> vertex.z;
+            sscanf(line, "v %f %f %f", &vertex.x, &vertex.y, &vertex.z);
             vertices.push_back(vertex);
-        } else if (word == "f") {
-            face_t face;
-            char slash; // to handle possible texture/normal indices
-            int dummy_num;
-            line_stream >> face.a >> slash >> dummy_num >> slash >> dummy_num
-                        >> face.b >> slash >> dummy_num >> slash >> dummy_num
-                        >> face.c;
-            face.color = 0xFFFFFFFF;
+        }
+        // Texture coordinate information
+        if (strncmp(line, "vt ", 3) == 0) {
+            tex2_t texcoord;
+            sscanf(line, "vt %f %f", &texcoord.u, &texcoord.v);
+            texcoords.push_back(texcoord);
+        }
+        // Face information
+        if (strncmp(line, "f ", 2) == 0) {
+            int vertex_indices[3];
+            int texture_indices[3];
+            int normal_indices[3];
+            sscanf(
+                line, "f %d/%d/%d %d/%d/%d %d/%d/%d",
+                &vertex_indices[0], &texture_indices[0], &normal_indices[0],
+                &vertex_indices[1], &texture_indices[1], &normal_indices[1],
+                &vertex_indices[2], &texture_indices[2], &normal_indices[2]
+            );
+            face_t face = {
+                vertex_indices[0],
+                vertex_indices[1],
+                vertex_indices[2],
+                texcoords[texture_indices[0] - 1],
+                texcoords[texture_indices[1] - 1],
+                texcoords[texture_indices[2] - 1],
+                0xFFFFFFFF
+            };
             faces.push_back(face);
-		}
+        }
     }
-
-    file.close();
+    fclose(file);
 }
 
