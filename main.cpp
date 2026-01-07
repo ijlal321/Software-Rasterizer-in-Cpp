@@ -2,14 +2,14 @@
 #include <vector>
 #include <SDL.h>
 #include <algorithm>
+#include <cstdint>
 #include "display.h"
 #include "vector.h"
 #include "Mesh.h"
 # include "matrix.h"
 #include "light.h"
 #include "texture.h"
-#include <iomanip>
-#include <cstdint>
+#include "camera.h"
 	
 #define MAX_TRIANGLES 10000
 std::vector<triangle_t> triangles_to_render(MAX_TRIANGLES); // triangles given to 
@@ -18,6 +18,7 @@ int num_triangles_to_render = 0;
 mesh_t cube_mesh;  // Main Object we Display
 mat4_t world_matrix;
 mat4_t proj_matrix;
+mat4_t view_matrix;
 
 bool is_running = false;
 std::vector<uint32_t> color_buffer;
@@ -26,10 +27,17 @@ Display display (color_buffer, z_buffer);
 
 texture_t texture_to_load;
 
-vec3_t camera_position = { 0, 0, 0 };
 light_t main_light = { {0, 0, 1} };
 
+camera_t camera {
+	vec3_t{ 0, 0, 0 },
+	vec3_t{ 0, 0, 1 },
+	vec3_t{ 0, 0, 0 },
+	0.0f
+};
+
 int previous_frame_time = 0;
+float delta_time = 0;
 
 void process_input() {
 	SDL_Event event;
@@ -57,8 +65,24 @@ void process_input() {
 			display.render_method = Render_Method::RENDER_TEXTURED_WIRE;
 		if (event.key.keysym.sym == SDLK_c)
 			display.cull_method = Cull_Method::CULL_BACKFACE;
-		if (event.key.keysym.sym == SDLK_d)
+		if (event.key.keysym.sym == SDLK_x)
 			display.cull_method = Cull_Method::CULL_NONE;
+		if (event.key.keysym.sym == SDLK_UP)
+			camera.position.y += 3.0 * delta_time;
+		if (event.key.keysym.sym == SDLK_DOWN)
+			camera.position.y -= 3.0 * delta_time;
+		if (event.key.keysym.sym == SDLK_a)
+			camera.yaw -= 1.0 * delta_time;
+		if (event.key.keysym.sym == SDLK_d)
+			camera.yaw += 1.0 * delta_time;
+		if (event.key.keysym.sym == SDLK_w) {
+			camera.forward_velocity = vec3_t::vec3_mul(camera.direction, 5.0 * delta_time);
+			camera.position = vec3_t::vec3_add(camera.position, camera.forward_velocity);
+		}
+		if (event.key.keysym.sym == SDLK_s) {
+			camera.forward_velocity = vec3_t::vec3_mul(camera.direction, 5.0 * delta_time);
+			camera.position = vec3_t::vec3_sub(camera.position, camera.forward_velocity);
+		}
 		break;	
 	default:
 		break;
@@ -91,16 +115,33 @@ void update(void) {
 	if (wait_time > 0 && wait_time <= FRAME_TARGET_TIME) {
 		SDL_Delay(wait_time);
 	}
+
+	// Get a delta time factor converted to seconds to be used to update our game objects
+	delta_time = (SDL_GetTicks() - previous_frame_time) / 1000.0;
+
 	previous_frame_time = SDL_GetTicks();
 
 	// Initialize the counter of triangles to render for the current frame
 	num_triangles_to_render = 0;
 
 	// Change the mesh scale, rotation, and translation values per animation frame
-	cube_mesh.rotation.x += 0.01f;
-	cube_mesh.rotation.y += 0.00f;
-	cube_mesh.rotation.z += 0.00f;
+	cube_mesh.rotation.x += 0.01f * delta_time;
+	cube_mesh.rotation.y += 0.00f * delta_time;
+	cube_mesh.rotation.z += 0.00f * delta_time;
 	cube_mesh.translation.z = 5.0f;
+
+
+	// Initialize the target looking at the positive z-axis
+	vec3_t target { 0, 0, 1 };
+	mat4_t camera_yaw_rotation = mat4_t::mat4_make_rotation_y(camera.yaw);
+	camera.direction = vec3_from_vec4(mat4_t::mat4_mul_vec4(camera_yaw_rotation, vec4_from_vec3(target)));
+
+	// Offset the camera position in the direction where the camera is pointing at
+	target = vec3_t::vec3_add(camera.position, camera.direction);
+	vec3_t up_direction { 0, 1, 0 };
+
+	// Create the view matrix
+	view_matrix = mat4_t::mat4_look_at(camera.position, target, up_direction);
 
 	// Create scale, rotation, and translation matrices that will be used to multiply the mesh vertices
 	mat4_t scale_matrix = mat4_t::mat4_make_scale(cube_mesh.scale.x, cube_mesh.scale.y, cube_mesh.scale.z);
@@ -139,6 +180,10 @@ void update(void) {
 			// Multiply the world matrix by the original vector
 			transformed_vertex = mat4_t::mat4_mul_vec4(world_matrix, transformed_vertex);
 
+			// Multiply the view matrix by the vector to transform the scene to camera space
+			transformed_vertex = mat4_t::mat4_mul_vec4(view_matrix, transformed_vertex);
+
+
 			// Save transformed vertex in the array of transformed vertices
 			transformed_vertices[j] = transformed_vertex;
 		}
@@ -159,7 +204,8 @@ void update(void) {
 		normal.vec3_normalize();
 
 		// Find the vector between vertex A in the triangle and the camera origin
-		vec3_t camera_ray = vec3_t::vec3_sub(camera_position, vector_a);
+		vec3_t origin = { 0, 0, 0 };
+		vec3_t camera_ray = vec3_t::vec3_sub(origin, vector_a);
 
 		// Calculate how aligned the camera ray is with the face normal (using dot product)
 		float dot_normal_camera = vec3_t::vec3_dot(normal, camera_ray);
