@@ -8,6 +8,7 @@ public:
     vec3_t direction;
     vec3_t forward_velocity;
     float yaw;
+    float pitch;
 
     camera_t(vec3_t position, vec3_t direction, vec3_t forward_velocity, float yaw) : 
         position(position),
@@ -15,5 +16,9 @@ public:
         forward_velocity(forward_velocity),
         yaw(yaw) 
     {};
+
+
+
+    vec3_t get_camera_lookat_target();
 };
 

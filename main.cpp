@@ -92,32 +92,42 @@ void process_input() {
 				display.cull_method = Cull_Method::CULL_NONE;
 				break;
 			}
-			if (event.key.keysym.sym == SDLK_UP) {
-				camera.position.y += 3.0 * delta_time;
+			if (event.key.keysym.sym == SDLK_w) {
+				camera.pitch += 3.0 * delta_time;
 				break;
 			}
-			if (event.key.keysym.sym == SDLK_DOWN) {
-				camera.position.y -= 3.0 * delta_time;
+			if (event.key.keysym.sym == SDLK_s) {
+				camera.pitch -= 3.0 * delta_time;
 				break;
 			}
-			if (event.key.keysym.sym == SDLK_a) {
-				camera.yaw -= 1.0 * delta_time;
-				break;
-			}
-			if (event.key.keysym.sym == SDLK_d) {
+			if (event.key.keysym.sym == SDLK_RIGHT) {
 				camera.yaw += 1.0 * delta_time;
 				break;
 			}
-			if (event.key.keysym.sym == SDLK_w) {
+			if (event.key.keysym.sym == SDLK_LEFT) {
+				camera.yaw -= 1.0 * delta_time;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_UP) {
 				camera.forward_velocity = vec3_t::vec3_mul(camera.direction, 5.0 * delta_time);
 				camera.position = vec3_t::vec3_add(camera.position, camera.forward_velocity);
 				break;
 			}
-			if (event.key.keysym.sym == SDLK_s) {
+			if (event.key.keysym.sym == SDLK_DOWN) {
 				camera.forward_velocity = vec3_t::vec3_mul(camera.direction, 5.0 * delta_time);
 				camera.position = vec3_t::vec3_sub(camera.position, camera.forward_velocity);
 				break;
+			}	
+
+			if (event.key.keysym.sym == SDLK_a) {
+				camera.position.y += 3.0 * delta_time;
+				break;
 			}
+			if (event.key.keysym.sym == SDLK_d) {
+				camera.position.y -= 3.0 * delta_time;
+				break;
+			}
+
 			break;
 		default:
 			break;
@@ -172,13 +182,9 @@ void update(void) {
 	cube_mesh.translation.z = 5.0f;
 
 
-	// Initialize the target looking at the positive z-axis
-	vec3_t target { 0, 0, 1 };
-	mat4_t camera_yaw_rotation = mat4_t::mat4_make_rotation_y(camera.yaw);
-	camera.direction = vec3_from_vec4(mat4_t::mat4_mul_vec4(camera_yaw_rotation, vec4_from_vec3(target)));
 
-	// Offset the camera position in the direction where the camera is pointing at
-	target = vec3_t::vec3_add(camera.position, camera.direction);
+	// Update camera look at target to create view matrix
+	vec3_t target = camera.get_camera_lookat_target();
 	vec3_t up_direction { 0, 1, 0 };
 
 	// Create the view matrix
