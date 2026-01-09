@@ -102,7 +102,7 @@ vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p) {
 // Function to draw the textured pixel at position x and y using interpolation
 ///////////////////////////////////////////////////////////////////////////////
 void draw_triangle_texel(
-    int x, int y, Display& display, texture_t& texture,
+    int x, int y, Display& display, texture_t* texture,
     vec4_t point_a, vec4_t point_b, vec4_t point_c,
     tex2_t a_uv, tex2_t b_uv, tex2_t c_uv
 ) {
@@ -141,8 +141,8 @@ void draw_triangle_texel(
 
 
     // Map the UV coordinate to the full texture width and height
-    int tex_x = abs((int)(interpolated_u * texture.texture_width)) % texture.texture_width;
-    int tex_y = abs((int)(interpolated_v * texture.texture_height)) % texture.texture_height;
+    int tex_x = abs((int)(interpolated_u * texture->texture_width)) % texture->texture_width;
+    int tex_y = abs((int)(interpolated_v * texture->texture_height)) % texture->texture_height;
 
     // Adjust 1/w so the pixels that are closer to the camera have smaller values
     interpolated_reciprocal_w = 1.0f - interpolated_reciprocal_w;
@@ -150,7 +150,7 @@ void draw_triangle_texel(
     // Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
     if (interpolated_reciprocal_w < display.z_buffer[(display.window_width * y) + x]) {
         // Draw a pixel at position (x,y) with the color that comes from the mapped texture
-        display.draw_pixel(x, y, texture.mesh_texture[(texture.texture_width * tex_y) + tex_x]);
+        display.draw_pixel(x, y, texture->mesh_texture[(texture->texture_width * tex_y) + tex_x]);
 
         // Update the z-buffer value with the 1/w of this current pixel
         display.z_buffer[(display.window_width * y) + x] = interpolated_reciprocal_w;
@@ -181,7 +181,7 @@ void triangle_t::draw_textured_triangle(
     int x0, int y0, float z0, float w0, float u0, float v0,
     int x1, int y1, float z1, float w1, float u1, float v1,
     int x2, int y2, float z2, float w2, float u2, float v2,
-    Display& display, texture_t& texture
+    Display& display, texture_t* texture
 ) {
     // We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
     if (y0 > y1) {
