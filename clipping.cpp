@@ -128,6 +128,10 @@ void frustrum_t::clip_polygon_against_plane(polygon_t* polygon, int plane) {
                 float_lerp(previous_vertex->z, current_vertex->z, t)
             };
 
+            if (plane == BOTTOM_FRUSTUM_PLANE) {
+                intersection_point.y += 0.01;
+            }
+
             // Use the lerp formula to get the interpolated U and V texture coordinates
             tex2_t interpolated_texcoord = {
                 float_lerp(previous_texcoord->u, current_texcoord->u, t),

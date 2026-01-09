@@ -107,9 +107,9 @@ void draw_triangle_texel(
     tex2_t a_uv, tex2_t b_uv, tex2_t c_uv
 ) {
 
-    // CLAMP first
-    if (x < 0 || x >= display.window_width || y < 0 || y >= display.window_height)
-        return;  // Skip out-of-bounds pixels
+    //// CLAMP first
+    //if (x < 0 || x >= display.window_width || y < 0 || y >= display.window_height)
+    //    return;  // Skip out-of-bounds pixels
 
 
     vec2_t p { x, y };
