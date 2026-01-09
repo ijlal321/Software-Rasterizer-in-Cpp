@@ -136,7 +136,7 @@ void Display::setup() {
 
 	color_buffer_texture = SDL_CreateTexture(
 		renderer,
-		SDL_PIXELFORMAT_ARGB8888,
+		SDL_PIXELFORMAT_RGBA32,
 		SDL_TEXTUREACCESS_STREAMING,
 		window_width,
 		window_height

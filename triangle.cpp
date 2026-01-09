@@ -21,6 +21,13 @@ void draw_triangle_pixel(
     vec4_t point_a, vec4_t point_b, vec4_t point_c,
 	Display& display
 ) {
+
+    // CLAMP first
+    if (x < 0 || x >= display.window_width || y < 0 || y >= display.window_height)
+        return;  // Skip out-of-bounds pixels
+
+
+
     // Create three vec2 to find the interpolation
     vec2_t p ( x, y );
     vec2_t a = vec2_from_vec4(point_a);
@@ -38,7 +45,7 @@ void draw_triangle_pixel(
     float interpolated_reciprocal_w = (1 / point_a.w) * alpha + (1 / point_b.w) * beta + (1 / point_c.w) * gamma;
 
     // Adjust 1/w so the pixels that are closer to the camera have smaller values
-    interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
+    interpolated_reciprocal_w = 1.0f - interpolated_reciprocal_w;
 
     // Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
     if (interpolated_reciprocal_w < display.z_buffer[(display.window_width * y) + x]) {
@@ -100,6 +107,11 @@ void draw_triangle_texel(
     tex2_t a_uv, tex2_t b_uv, tex2_t c_uv
 ) {
 
+    // CLAMP first
+    if (x < 0 || x >= display.window_width || y < 0 || y >= display.window_height)
+        return;  // Skip out-of-bounds pixels
+
+
     vec2_t p { x, y };
     vec2_t a = vec2_from_vec4(point_a);
     vec2_t b = vec2_from_vec4(point_b);
@@ -133,7 +145,7 @@ void draw_triangle_texel(
     int tex_y = abs((int)(interpolated_v * texture.texture_height)) % texture.texture_height;
 
     // Adjust 1/w so the pixels that are closer to the camera have smaller values
-    interpolated_reciprocal_w = 1.0 - interpolated_reciprocal_w;
+    interpolated_reciprocal_w = 1.0f - interpolated_reciprocal_w;
 
     // Only draw the pixel if the depth value is less than the one previously stored in the z-buffer
     if (interpolated_reciprocal_w < display.z_buffer[(display.window_width * y) + x]) {
@@ -198,9 +210,9 @@ void triangle_t::draw_textured_triangle(
     }
 
     // Flip the V component to account for inverted UV-coordinates (V grows downwards)
-    v0 = 1.0 - v0;
-    v1 = 1.0 - v1;
-    v2 = 1.0 - v2;
+    v0 = 1.0f - v0;
+    v1 = 1.0f - v1;
+    v2 = 1.0f - v2;
 
     // Create vector points and texture coords after we sort the vertices
     vec4_t point_a ( x0, y0, z0, w0 );
@@ -220,7 +232,7 @@ void triangle_t::draw_textured_triangle(
     if (y2 - y0 != 0) inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
 
     if (y1 - y0 != 0) {
-        for (int y = y0; y <= y1; y++) {
+        for (int y = y0; y < y1; y++) {
             int x_start = x1 + (y - y1) * inv_slope_1;
             int x_end = x0 + (y - y0) * inv_slope_2;
 
@@ -245,7 +257,7 @@ void triangle_t::draw_textured_triangle(
     if (y2 - y0 != 0) inv_slope_2 = (float)(x2 - x0) / abs(y2 - y0);
 
     if (y2 - y1 != 0) {
-        for (int y = y1; y <= y2; y++) {
+        for (int y = y1; y < y2; y++) {
             int x_start = x1 + (y - y1) * inv_slope_1;
             int x_end = x0 + (y - y0) * inv_slope_2;
 

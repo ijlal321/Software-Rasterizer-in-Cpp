@@ -43,6 +43,9 @@ public:
 	static vec3_t vec3_cross(vec3_t a, vec3_t b);
 	static float vec3_dot(vec3_t a, vec3_t b);
 
+
+	static vec3_t vec3_clone(vec3_t * v);
+
 };
 
 class vec4_t {

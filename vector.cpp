@@ -131,6 +131,9 @@ float vec3_t::vec3_dot(vec3_t a, vec3_t b) {
 	return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
+vec3_t vec3_t::vec3_clone(vec3_t * v) {
+	return vec3_t(v->x, v->y, v->z);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Implementations of Vector conversion functions

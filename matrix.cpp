@@ -117,20 +117,6 @@ mat4_t mat4_t::mat4_make_perspective(float fov, float aspect, float znear, float
     return m;
 }
 
-vec4_t mat4_t::mat4_mul_vec4_project(mat4_t mat_proj, vec4_t v) {
-    // multiply the projection matrix by our original vector
-    vec4_t result = mat4_mul_vec4(mat_proj, v);
-
-    // perform perspective divide with original z-value that is now stored in w
-    if (result.w != 0.0) {
-        result.x /= result.w;
-        result.y /= result.w;
-        result.z /= result.w;
-    }
-    return result;
-}
-
-
 mat4_t mat4_t::mat4_look_at(vec3_t eye, vec3_t target, vec3_t up) {
     // Compute the forward (z), right (x), and up (y) vectors
     vec3_t z = vec3_t::vec3_sub(target, eye);

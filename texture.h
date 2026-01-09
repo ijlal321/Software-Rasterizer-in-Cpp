@@ -11,6 +11,8 @@ public:
 
 	//tex2_t() : u(0.0f), v(0.0f) {};
 
+	static tex2_t tex2_clone(tex2_t* tex);
+
 };
 
 class texture_t {

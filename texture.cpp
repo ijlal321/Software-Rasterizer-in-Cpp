@@ -80,3 +80,11 @@ void texture_t::load_png_texture_data(const char* filename) {
         }
     }
 }
+
+tex2_t tex2_t::tex2_clone(tex2_t* tex)
+{
+    tex2_t t;
+    t.u = tex->u;
+    t.v = tex->v;
+    return t;
+}

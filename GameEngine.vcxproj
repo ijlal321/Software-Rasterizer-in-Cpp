@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="clipping.cpp" />
     <ClCompile Include="display.cpp" />
     <ClCompile Include="light.cpp" />
     <ClCompile Include="main.cpp" />
@@ -33,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="clipping.h" />
     <ClInclude Include="display.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="matrix.h" />
