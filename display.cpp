@@ -11,7 +11,7 @@
 // Display class function definitions
 // =============================
 
-bool Display::initialize_window() {
+bool Display::initialize_window(bool simulate_low_res, int simulated_window_height, int simulated_window_width) {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
 		return false;
@@ -20,17 +20,27 @@ bool Display::initialize_window() {
 	// get screen info
 	SDL_DisplayMode display_mode;
 	SDL_GetCurrentDisplayMode(0, &display_mode);
-	window_width = display_mode.w;
-	window_height = display_mode.h;
-	std::cout << "Screen width: " << window_width << ", Screen height: " << window_height << std::endl;
+	int full_screen_width = display_mode.w;
+	int full_screen_height = display_mode.h;
 	
+	if (!simulate_low_res) {
+		window_width = full_screen_width;
+		window_height = full_screen_height;
+	}
+	else {
+		window_width = simulated_window_width;
+		window_height = simulated_window_height;
+	}
+
+	std::cout << "Screen width: " << window_width << ", Screen height: " << window_height << std::endl;
+
 	// create a window
 	window = SDL_CreateWindow(
 		"My window",
 		SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED,
-		window_width,
-		window_height,
+		full_screen_width,
+		full_screen_height,
 		SDL_WINDOW_BORDERLESS
 	);
 

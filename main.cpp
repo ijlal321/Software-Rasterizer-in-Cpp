@@ -13,6 +13,10 @@
 #include "clipping.h"
 #include <array>
 	
+const bool SIMULATE_LOW_RESOLUTION = false;
+const int SIMULATED_WINDOW_WIDTH = 100 * 1.6; //  only applicable if simulating low res is true
+const int SIMULATED_WINDOW_HEIGHT = 100;     // `` 
+
 #define MAX_TRIANGLES 10000
 std::array<triangle_t, MAX_TRIANGLES> triangles_to_render; // triangles given to 
 int num_triangles_to_render = 0;
@@ -393,7 +397,7 @@ void render() {
 
 
 int main(int argc, char* args[]) {
-	is_running = display.initialize_window();
+	is_running = display.initialize_window(SIMULATE_LOW_RESOLUTION, SIMULATED_WINDOW_HEIGHT, SIMULATED_WINDOW_WIDTH);
 
 	setup();
 

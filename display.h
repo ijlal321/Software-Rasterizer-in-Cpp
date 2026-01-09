@@ -48,7 +48,7 @@ public:
 	int window_height = 600;
 
 
-	bool initialize_window();
+	bool initialize_window(bool simulate_low_res, int simulated_window_height, int simulated_window_width);
 	void draw_grid(uint32_t color);
 	void draw_rect(int x_pos, int y_pos, int height, int width, uint32_t color);
 	void draw_line(int x0, int y0, int x1, int y1, uint32_t color);
