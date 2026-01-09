@@ -41,51 +41,80 @@ float delta_time = 0;
 
 void process_input() {
 	SDL_Event event;
-	SDL_PollEvent(&event);
+	while (SDL_PollEvent(&event)) {
 
-	switch (event.type) {
-	case SDL_QUIT:
-		is_running = false;
-		break;
-	case SDL_KEYDOWN:
-		std::cout << "pressed" << std::endl;
-		if (event.key.keysym.sym == SDLK_ESCAPE)
+		switch (event.type) {
+		case SDL_QUIT:
 			is_running = false;
-		if (event.key.keysym.sym == SDLK_1)
-			display.render_method = Render_Method::RENDER_WIRE_VERTEX;
-		if (event.key.keysym.sym == SDLK_2)
-			display.render_method = Render_Method::RENDER_WIRE;
-		if (event.key.keysym.sym == SDLK_3)
-			display.render_method = Render_Method::RENDER_FILL_TRIANGLE;
-		if (event.key.keysym.sym == SDLK_4)
-			display.render_method = Render_Method::RENDER_FILL_TRIANGLE_WIRE;
-		if (event.key.keysym.sym == SDLK_5)
-			display.render_method = Render_Method::RENDER_TEXTURED;
-		if (event.key.keysym.sym == SDLK_6)
-			display.render_method = Render_Method::RENDER_TEXTURED_WIRE;
-		if (event.key.keysym.sym == SDLK_c)
-			display.cull_method = Cull_Method::CULL_BACKFACE;
-		if (event.key.keysym.sym == SDLK_x)
-			display.cull_method = Cull_Method::CULL_NONE;
-		if (event.key.keysym.sym == SDLK_UP)
-			camera.position.y += 3.0 * delta_time;
-		if (event.key.keysym.sym == SDLK_DOWN)
-			camera.position.y -= 3.0 * delta_time;
-		if (event.key.keysym.sym == SDLK_a)
-			camera.yaw -= 1.0 * delta_time;
-		if (event.key.keysym.sym == SDLK_d)
-			camera.yaw += 1.0 * delta_time;
-		if (event.key.keysym.sym == SDLK_w) {
-			camera.forward_velocity = vec3_t::vec3_mul(camera.direction, 5.0 * delta_time);
-			camera.position = vec3_t::vec3_add(camera.position, camera.forward_velocity);
+			break;
+		case SDL_KEYDOWN:
+			std::cout << "pressed" << std::endl;
+			if (event.key.keysym.sym == SDLK_ESCAPE) {
+				is_running = false;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_1) {
+				display.render_method = Render_Method::RENDER_WIRE_VERTEX;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_2) {
+				 display.render_method = Render_Method::RENDER_WIRE;
+				 break;
+			}
+			if (event.key.keysym.sym == SDLK_3) {
+				 display.render_method = Render_Method::RENDER_FILL_TRIANGLE;
+				 break;
+			}
+			if (event.key.keysym.sym == SDLK_4) {
+				display.render_method = Render_Method::RENDER_FILL_TRIANGLE_WIRE;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_5) {
+				display.render_method = Render_Method::RENDER_TEXTURED;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_6) {
+				display.render_method = Render_Method::RENDER_TEXTURED_WIRE;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_c) {
+				display.cull_method = Cull_Method::CULL_BACKFACE;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_x) {
+				display.cull_method = Cull_Method::CULL_NONE;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_UP) {
+				camera.position.y += 3.0 * delta_time;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_DOWN) {
+				camera.position.y -= 3.0 * delta_time;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_a) {
+				camera.yaw -= 1.0 * delta_time;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_d) {
+				camera.yaw += 1.0 * delta_time;
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_w) {
+				camera.forward_velocity = vec3_t::vec3_mul(camera.direction, 5.0 * delta_time);
+				camera.position = vec3_t::vec3_add(camera.position, camera.forward_velocity);
+				break;
+			}
+			if (event.key.keysym.sym == SDLK_s) {
+				camera.forward_velocity = vec3_t::vec3_mul(camera.direction, 5.0 * delta_time);
+				camera.position = vec3_t::vec3_sub(camera.position, camera.forward_velocity);
+				break;
+			}
+			break;
+		default:
+			break;
 		}
-		if (event.key.keysym.sym == SDLK_s) {
-			camera.forward_velocity = vec3_t::vec3_mul(camera.direction, 5.0 * delta_time);
-			camera.position = vec3_t::vec3_sub(camera.position, camera.forward_velocity);
-		}
-		break;	
-	default:
-		break;
 	}
 }
 
