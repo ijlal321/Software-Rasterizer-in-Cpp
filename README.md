@@ -7,6 +7,20 @@ Here is what final project looks like
 
 https://github.com/user-attachments/assets/b7e88592-1ed5-4023-8a99-a789fc463fa1
 
+# Features
+
+- Perspective Projection
+- DDA Line Drawing Algorithm
+- Loading OBJ File Content
+- Back-face Culling
+- Barycentric Weights (Texture Mapping)
+- Painter's Algorithm
+- Gouraud Shading & Phong Shading
+- LookAt Camera Model
+- Simple FPS Camera Model
+- 3D Clipping
+- Rendering Multiple Meshes
+
 # Topics To Review
 
 Concepts that I still lack some total understanding of:
