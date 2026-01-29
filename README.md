@@ -9,6 +9,8 @@ https://github.com/user-attachments/assets/b7e88592-1ed5-4023-8a99-a789fc463fa1
 
 # Features
 
+Featues in order of implementation
+
 - Perspective Projection
 - DDA Line Drawing Algorithm
 - Loading OBJ File Content
